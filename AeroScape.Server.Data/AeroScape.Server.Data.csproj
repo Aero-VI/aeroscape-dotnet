@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\AeroScape.Server.Core\AeroScape.Server.Core.csproj" />
@@ -9,5 +9,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0-preview.4.25258.110" />
+  </ItemGroup>
 
 </Project>
