@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "AeroScape.Server.Core/1.0.0": {
+        "runtime": {
+          "AeroScape.Server.Core.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "AeroScape.Server.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

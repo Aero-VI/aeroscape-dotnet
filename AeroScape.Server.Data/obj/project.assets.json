@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net10.0": {}
+    "net10.0": {
+      "AeroScape.Server.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/AeroScape.Server.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AeroScape.Server.Core.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "AeroScape.Server.Core/1.0.0": {
+      "type": "project",
+      "path": "../AeroScape.Server.Core/AeroScape.Server.Core.csproj",
+      "msbuildProject": "../AeroScape.Server.Core/AeroScape.Server.Core.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net10.0": []
+    "net10.0": [
+      "AeroScape.Server.Core >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "/home/aeroverra/.nuget/packages/": {}
@@ -31,7 +50,11 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Core/AeroScape.Server.Core.csproj": {
+              "projectPath": "/home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Core/AeroScape.Server.Core.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

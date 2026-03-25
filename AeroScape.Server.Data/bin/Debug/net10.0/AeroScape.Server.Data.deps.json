@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "AeroScape.Server.Data/1.0.0": {
+        "dependencies": {
+          "AeroScape.Server.Core": "1.0.0"
+        },
+        "runtime": {
+          "AeroScape.Server.Data.dll": {}
+        }
+      },
+      "AeroScape.Server.Core/1.0.0": {
+        "runtime": {
+          "AeroScape.Server.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "AeroScape.Server.Data/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AeroScape.Server.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
