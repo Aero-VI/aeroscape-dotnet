@@ -10,7 +10,8 @@ public class ClanChatMessageHandler : IMessageHandler<ClanChatMessage>
 {
     public Task HandleAsync(PlayerSession session, ClanChatMessage message, CancellationToken cancellationToken)
     {
-        Console.WriteLine($"[ClanChat] Player {session.SessionId}: {message.Message}");
+        // TODO: Implement clan chat logic
+        Console.WriteLine($"[ClanChat] Player {session.SessionId} ({message.PlayerName}) sent message to clan {message.ClanName}: {message.Message}");
         return Task.CompletedTask;
     }
 }

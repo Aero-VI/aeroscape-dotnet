@@ -10,7 +10,8 @@ public class BountyHunterMessageHandler : IMessageHandler<BountyHunterMessage>
 {
     public Task HandleAsync(PlayerSession session, BountyHunterMessage message, CancellationToken cancellationToken)
     {
-        Console.WriteLine($"[BountyHunter] Player {session.SessionId} targeted {message.TargetId}");
+        // TODO: Implement bounty hunter target logic
+        Console.WriteLine($"[BountyHunter] Player {session.SessionId} updated target to {message.TargetId}");
         return Task.CompletedTask;
     }
 }

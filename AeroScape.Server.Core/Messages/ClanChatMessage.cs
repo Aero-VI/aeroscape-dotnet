@@ -1,3 +1,3 @@
 namespace AeroScape.Server.Core.Messages;
 
-public record ClanChatMessage(string Message);
+public record ClanChatMessage(string ClanName, string PlayerName, string Message);
