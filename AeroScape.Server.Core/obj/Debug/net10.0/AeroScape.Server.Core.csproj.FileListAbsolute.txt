@@ -9,3 +9,4 @@
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Core/obj/Debug/net10.0/refint/AeroScape.Server.Core.dll
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Core/obj/Debug/net10.0/AeroScape.Server.Core.pdb
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Core/obj/Debug/net10.0/ref/AeroScape.Server.Core.dll
+/home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Core/obj/Debug/net10.0/AeroScape.Server.Core.csproj.AssemblyReference.cache

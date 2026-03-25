@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "DfLCl9arzq4=",
+  "dgSpecHash": "2UC1YwniYTE=",
   "success": true,
   "projectFilePath": "/home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Core/AeroScape.Server.Core.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/home/aeroverra/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.5/microsoft.extensions.dependencyinjection.abstractions.10.0.5.nupkg.sha512",
+    "/home/aeroverra/.nuget/packages/microsoft.extensions.logging.abstractions/10.0.5/microsoft.extensions.logging.abstractions.10.0.5.nupkg.sha512"
+  ],
   "logs": []
 }

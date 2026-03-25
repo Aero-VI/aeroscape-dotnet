@@ -608,6 +608,9 @@
       "AeroScape.Server.Core/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.5"
+        },
         "compile": {
           "bin/placeholder/AeroScape.Server.Core.dll": {}
         },

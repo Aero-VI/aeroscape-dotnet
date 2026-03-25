@@ -105,6 +105,9 @@
         }
       },
       "AeroScape.Server.Core/1.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.5"
+        },
         "runtime": {
           "AeroScape.Server.Core.dll": {
             "assemblyVersion": "1.0.0.0",
