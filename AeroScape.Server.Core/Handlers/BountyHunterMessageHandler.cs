@@ -1,0 +1,16 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using AeroScape.Server.Core.Messages;
+using AeroScape.Server.Core.Session;
+
+namespace AeroScape.Server.Core.Handlers;
+
+public class BountyHunterMessageHandler : IMessageHandler<BountyHunterMessage>
+{
+    public Task HandleAsync(PlayerSession session, BountyHunterMessage message, CancellationToken cancellationToken)
+    {
+        Console.WriteLine($"[BountyHunter] Player {session.SessionId} targeted {message.TargetId}");
+        return Task.CompletedTask;
+    }
+}

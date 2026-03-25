@@ -50,3 +50,4 @@
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.App/obj/Debug/net10.0/AeroScape.Server.App.pdb
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.App/obj/Debug/net10.0/AeroScape.Server.App.genruntimeconfig.cache
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.App/obj/Debug/net10.0/ref/AeroScape.Server.App.dll
+/home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.App/obj/Debug/net10.0/AeroScape.Server.App.sourcelink.json

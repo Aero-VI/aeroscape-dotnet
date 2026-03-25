@@ -13,3 +13,4 @@
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Data/obj/Debug/net10.0/refint/AeroScape.Server.Data.dll
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Data/obj/Debug/net10.0/AeroScape.Server.Data.pdb
 /home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Data/obj/Debug/net10.0/ref/AeroScape.Server.Data.dll
+/home/aeroverra/.openclaw/workspace/projects/aeroscape-dotnet/AeroScape.Server.Data/obj/Debug/net10.0/AeroScape.Server.Data.sourcelink.json
