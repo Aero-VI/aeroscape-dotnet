@@ -89,9 +89,33 @@ public sealed class PacketRouter
     /// Attempt to consume as many complete packets as possible from <paramref name="buffer"/>.
     /// Returns the number of bytes consumed so the caller can advance the pipe reader.
     /// </summary>
-    public long ProcessBuffer(PlayerSession session, ReadOnlySequence<byte> buffer)
+    /// <remarks>
+    /// Parsing is synchronous (required by the ref-struct <see cref="SequenceReader{T}"/>),
+    /// but handler dispatch is fully async — no sync-over-async blocking.
+    /// </remarks>
+    public async Task<long> ProcessBufferAsync(PlayerSession session, ReadOnlySequence<byte> buffer)
+    {
+        // Phase 1: Parse packets synchronously (SequenceReader is a ref struct).
+        var (consumed, packets) = ParsePackets(session, buffer);
+
+        // Phase 2: Dispatch decoded packets asynchronously.
+        foreach (var (opcode, payload) in packets)
+        {
+            await DispatchPacketAsync(session, opcode, payload);
+        }
+
+        return consumed;
+    }
+
+    /// <summary>
+    /// Synchronously parses up to 10 framed packets from <paramref name="buffer"/>,
+    /// decrypting opcodes via ISAAC when the session cipher is initialised.
+    /// </summary>
+    private (long Consumed, List<(int Opcode, ReadOnlySequence<byte> Payload)> Packets) ParsePackets(
+        PlayerSession session, ReadOnlySequence<byte> buffer)
     {
         var reader = new SequenceReader<byte>(buffer);
+        var packets = new List<(int, ReadOnlySequence<byte>)>();
         int packetsRead = 0;
 
         while (packetsRead < 10) // cap per cycle, same as legacy Java
@@ -99,7 +123,13 @@ public sealed class PacketRouter
             if (!reader.TryRead(out byte rawOpcode))
                 break;
 
-            int opcode = rawOpcode & 0xFF;
+            // Decrypt the opcode using the session's ISAAC cipher (RS 508 protocol).
+            // The client encrypts opcodes with its ISAAC instance; the server must
+            // subtract the next ISAAC value to recover the real opcode.
+            int opcode = session.InCipher is not null
+                ? (rawOpcode - session.InCipher.NextInt()) & 0xFF
+                : rawOpcode & 0xFF;
+
             var def = ProtocolDictionary.Incoming[opcode];
             int size = def.Size;
 
@@ -136,16 +166,14 @@ public sealed class PacketRouter
                     session.SessionId, def.Name, opcode, size);
             }
 
-            // Decode and dispatch
-            DispatchPacket(session, opcode, payload);
-
+            packets.Add((opcode, payload));
             packetsRead++;
         }
 
-        return reader.Consumed;
+        return (reader.Consumed, packets);
     }
 
-    private void DispatchPacket(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    private async Task DispatchPacketAsync(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
     {
         if (!_decoders.TryGetValue(opcode, out var decoder))
         {
@@ -186,7 +214,7 @@ public sealed class PacketRouter
             // since we don't know T at compile time.
             var method = handlerType.GetMethod("HandleAsync")!;
             var task = (Task)method.Invoke(handler, new[] { session, message, CancellationToken.None })!;
-            task.GetAwaiter().GetResult(); // Synchronous for now; packet processing is already on a dedicated read task
+            await task;
         }
         catch (Exception ex)
         {

@@ -196,7 +196,7 @@ public sealed class TcpBackgroundService : BackgroundService
                 var result = await reader.ReadAsync(cts.Token);
                 var buffer = result.Buffer;
 
-                long consumed = _router.ProcessBuffer(session, buffer);
+                long consumed = await _router.ProcessBufferAsync(session, buffer);
                 reader.AdvanceTo(buffer.GetPosition(consumed), buffer.End);
 
                 if (result.IsCompleted) break;
