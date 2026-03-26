@@ -5,14 +5,17 @@ namespace AeroScape.Server.Core.Services;
 public sealed class DialogueService
 {
     private readonly InventoryService _inventory;
+    private readonly IClientUiService _ui;
 
-    public DialogueService(InventoryService inventory)
+    public DialogueService(InventoryService inventory, IClientUiService ui)
     {
         _inventory = inventory;
+        _ui = ui;
     }
 
     public bool Continue(Player player)
     {
+        int nextDialogue = player.Dialogue;
         switch (player.Dialogue)
         {
             case 1: AcceptCape(player, 9779, 9777); return true;
@@ -68,13 +71,13 @@ public sealed class DialogueService
             case 51: AcceptCape(player, 9812, 9810); return true;
             case 52: AcceptCape(player, 9791, 9789); return true;
             case 54: AcceptCape(player, 12171, 12169); return true;
-            case 100: player.Dialogue = 101; return true;
+            case 100: player.Dialogue = 101; break;
             case 101: player.DragonSlayer = 1; player.Dialogue = 0; return true;
-            case 102: player.Dialogue = 103; return true;
-            case 103: player.DragonSlayer = 3; player.Dialogue = 104; return true;
+            case 102: player.Dialogue = 103; break;
+            case 103: player.DragonSlayer = 3; player.Dialogue = 104; break;
             case 104: player.Dialogue = 0; player.Choice = 1; return true;
-            case 105: player.Dialogue = 106; return true;
-            case 106: player.Dialogue = 107; return true;
+            case 105: player.Dialogue = 106; break;
+            case 106: player.Dialogue = 107; break;
             case 107: player.DragonSlayer = 2; player.Dialogue = 0; return true;
             case 108: Give(player, 1538); return true;
             case 109: player.SetCoords(3048, 3208, 1); player.Dialogue = 0; return true;
@@ -93,6 +96,17 @@ public sealed class DialogueService
                 player.Dialogue = 0;
                 return false;
         }
+
+        nextDialogue = player.Dialogue;
+        if (nextDialogue > 0)
+            Render(player);
+        return true;
+    }
+
+    public void Start(Player player, int dialogue)
+    {
+        player.Dialogue = dialogue;
+        Render(player);
     }
 
     private void AcceptCape(Player player, int hoodId, int capeId)
@@ -129,5 +143,42 @@ public sealed class DialogueService
             _inventory.AddItem(player, 5288, 1);
 
         player.Dialogue = 0;
+    }
+
+    private void Render(Player player)
+    {
+        switch (player.Dialogue)
+        {
+            case 100:
+                _ui.ShowNpcDialogue(player, 198, "Guildmaster", "Looking for a quest are you?");
+                break;
+            case 101:
+                _ui.ShowNpcDialogue(player, 198, "Guildmaster", "Well then speak to Oziach in Edgeville.");
+                break;
+            case 102:
+                _ui.ShowNpcDialogue(player, 198, "Guildmaster", "Ah yes, the dragon of Crandor Island...");
+                break;
+            case 103:
+                _ui.ShowNpcDialogue(player, 198, "Guildmaster", "You will need a map, ship, and somthing to");
+                break;
+            case 104:
+                _ui.ShowOptionDialogue(player, "How can I find a route to Crandor?", "Where can I find the right ship?", "How can I protect myself from the dragon's breath?");
+                break;
+            case 105:
+                _ui.ShowNpcDialogue(player, 747, "Oziach", "The guild master sent you right...");
+                break;
+            case 106:
+                _ui.ShowNpcDialogue(player, 747, "Oziach", "There is somthing you could do...");
+                break;
+            case 107:
+                _ui.ShowNpcDialogue(player, 747, "Oziach", "Kill Elvarg the dragon on crandor island.");
+                break;
+            case 108:
+                _ui.ShowNpcDialogue(player, 746, "Oracle", "You are looking for a map to crandor?");
+                break;
+            case 111:
+                _ui.ShowNpcDialogue(player, 2567, "Wise Old Man", "Looks like you completed all the quests...");
+                break;
+        }
     }
 }

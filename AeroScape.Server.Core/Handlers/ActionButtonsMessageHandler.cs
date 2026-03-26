@@ -15,14 +15,18 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
     private readonly TradingService _trading;
     private readonly PlayerItemsService _items;
     private readonly MagicService _magic;
+    private readonly ShopService _shops;
+    private readonly PrayerService _prayers;
 
-    public ActionButtonsMessageHandler(ILogger<ActionButtonsMessageHandler> logger, PlayerBankService bank, TradingService trading, PlayerItemsService items, MagicService magic)
+    public ActionButtonsMessageHandler(ILogger<ActionButtonsMessageHandler> logger, PlayerBankService bank, TradingService trading, PlayerItemsService items, MagicService magic, ShopService shops, PrayerService prayers)
     {
         _logger = logger;
         _bank = bank;
         _trading = trading;
         _items = items;
         _magic = magic;
+        _shops = shops;
+        _prayers = prayers;
     }
     public Task HandleAsync(PlayerSession session, ActionButtonsMessage message, CancellationToken cancellationToken)
     {
@@ -44,6 +48,9 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
                 break;
             case 300:
                 player.Smithing.SmithItem(message.ButtonId);
+                break;
+            case 271:
+                _prayers.Toggle(player, message.ButtonId);
                 break;
             case 763:
                 if (message.ButtonId == 0)
@@ -100,6 +107,48 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
                     else if (message.PacketOpcode == 233)
                     {
                         player.ViewingBankTab = _bank.GetArrayIndex(message.ButtonId);
+                    }
+                }
+                break;
+            case 620:
+                if (message.ButtonId == 24 && message.SlotId >= 0 && message.SlotId < player.ShopItems.Length)
+                {
+                    var itemId = player.ShopItems[message.SlotId];
+                    if (itemId >= 0)
+                    {
+                        switch (message.PacketOpcode)
+                        {
+                            case 21:
+                                _shops.Buy(player, itemId, 1);
+                                break;
+                            case 169:
+                                _shops.Buy(player, itemId, 5);
+                                break;
+                            case 214:
+                                _shops.Buy(player, itemId, 10);
+                                break;
+                        }
+                    }
+                }
+                break;
+            case 621:
+                if (message.ButtonId == 0 && message.SlotId >= 0 && message.SlotId < player.Items.Length)
+                {
+                    var itemId = player.Items[message.SlotId];
+                    if (itemId >= 0)
+                    {
+                        switch (message.PacketOpcode)
+                        {
+                            case 21:
+                                _shops.Sell(player, itemId, 1);
+                                break;
+                            case 169:
+                                _shops.Sell(player, itemId, 5);
+                                break;
+                            case 214:
+                                _shops.Sell(player, itemId, 10);
+                                break;
+                        }
                     }
                 }
                 break;

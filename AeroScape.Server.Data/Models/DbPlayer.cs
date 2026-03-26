@@ -64,6 +64,11 @@ public class DbPlayer
 
     // ── Construction / Housing ──────────────────────────────────────────────
     public int HouseDecor { get; set; }
+    public int HouseHeight { get; set; }
+    [MaxLength(2048)]
+    public string ConstructionRoomsData { get; set; } = string.Empty;
+    [MaxLength(4096)]
+    public string ConstructionFurnitureData { get; set; } = string.Empty;
 
     // ── Summoning ───────────────────────────────────────────────────────────
     public int FamiliarType { get; set; }

@@ -100,8 +100,12 @@ public sealed class PlayerPersistenceService : BackgroundService, IPlayerPersist
         dbPlayer.ArmadylKillCount = player.ArmadylKillCount;
         dbPlayer.SaradominKillCount = player.SaradominKillCount;
         dbPlayer.HouseDecor = player.HouseDecor;
+        dbPlayer.HouseHeight = player.HouseHeight;
+        dbPlayer.ConstructionRoomsData = player.ConstructionRoomsData;
+        dbPlayer.ConstructionFurnitureData = player.ConstructionFurnitureData;
         dbPlayer.FamiliarType = player.FamiliarType;
         dbPlayer.ClanName = player.ClanName;
+        dbPlayer.PasswordHash = string.IsNullOrWhiteSpace(player.PasswordHash) ? dbPlayer.PasswordHash : player.PasswordHash;
         dbPlayer.LookData = string.Join(',', player.Look);
         dbPlayer.ColourData = string.Join(',', player.Colour);
         dbPlayer.LastLogin = DateTime.UtcNow;

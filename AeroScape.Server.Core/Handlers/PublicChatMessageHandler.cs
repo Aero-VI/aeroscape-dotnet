@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Messages;
+using AeroScape.Server.Core.Services;
 using AeroScape.Server.Core.Session;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,7 @@ namespace AeroScape.Server.Core.Handlers;
 public class PublicChatMessageHandler : IMessageHandler<PublicChatMessage>
 {
     private readonly ILogger<PublicChatMessageHandler> _logger;
+    private readonly ClanChatService _clanChat;
 
     /// <summary>
     /// Words to censor from public chat. In production this should be loaded from config.
@@ -26,9 +28,10 @@ public class PublicChatMessageHandler : IMessageHandler<PublicChatMessage>
         "sex", "pussy", "vagina", "dick", "blow", "bastard"
     };
 
-    public PublicChatMessageHandler(ILogger<PublicChatMessageHandler> logger)
+    public PublicChatMessageHandler(ILogger<PublicChatMessageHandler> logger, ClanChatService clanChat)
     {
         _logger = logger;
+        _clanChat = clanChat;
     }
 
     public Task HandleAsync(PlayerSession session, PublicChatMessage message, CancellationToken cancellationToken)
@@ -96,8 +99,7 @@ public class PublicChatMessageHandler : IMessageHandler<PublicChatMessage>
 
     private void HandleClanChat(PlayerSession session, Player player, string message)
     {
-        // TODO: Dispatch to clan chat system
-        // ClanMain.ClanMessage(player, message);
+        _clanChat.SendMessage(player, message);
         _logger.LogDebug("Player {Username} clan chat: {Message}", player.Username, message);
     }
 }

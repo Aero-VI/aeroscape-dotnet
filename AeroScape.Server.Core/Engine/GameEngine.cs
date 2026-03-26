@@ -48,6 +48,7 @@ public class GameEngine : BackgroundService
     public NPC?[] Npcs { get; } = new NPC?[MaxNpcs];
     public Dictionary<int, NpcDefinition> NpcDefinitions { get; } = new();
     public List<NpcSpawnDefinition> NpcSpawns { get; } = new();
+    public List<LoadedObject> LoadedObjects { get; } = new();
 
     // ── Minigame / global timers (translated from Engine.java statics) ──────
     public int FightPitTimer { get; set; } = 120;
@@ -71,6 +72,7 @@ public class GameEngine : BackgroundService
     private readonly DeathService _deaths;
     private readonly LegacyFileManager _fileManager;
     private readonly NpcSpawnLoader _npcSpawnLoader;
+    private readonly ObjectLoaderService _objectLoader;
     private readonly GroundItemManager _groundItems;
     private bool _worldLoaded;
 
@@ -90,6 +92,7 @@ public class GameEngine : BackgroundService
         DeathService deaths,
         LegacyFileManager fileManager,
         NpcSpawnLoader npcSpawnLoader,
+        ObjectLoaderService objectLoader,
         GroundItemManager groundItems)
     {
         _logger = logger;
@@ -99,6 +102,7 @@ public class GameEngine : BackgroundService
         _deaths = deaths;
         _fileManager = fileManager;
         _npcSpawnLoader = npcSpawnLoader;
+        _objectLoader = objectLoader;
         _groundItems = groundItems;
         PlayerCombat = new PlayerVsPlayerCombat(this, pvpLogger);
         PlayerNpcCombat = new PlayerVsNpcCombat(this, pveLogger);
@@ -417,6 +421,7 @@ public class GameEngine : BackgroundService
 
         string npcListPath = Path.Combine(Directory.GetCurrentDirectory(), "legacy-java", "server508", "data", "npcs", "npclist.cfg");
         string npcSpawnPath = Path.Combine(Directory.GetCurrentDirectory(), "legacy-java", "server508", "data", "npcs", "npcspawn.cfg");
+        string objectPath = Path.Combine(Directory.GetCurrentDirectory(), "legacy-java", "server508", "data", "objects.cfg");
 
         foreach (var pair in _npcSpawnLoader.LoadDefinitions(npcListPath))
             NpcDefinitions[pair.Key] = pair.Value;
@@ -424,6 +429,9 @@ public class GameEngine : BackgroundService
         NpcSpawns.AddRange(_npcSpawnLoader.LoadSpawns(npcSpawnPath));
         foreach (var spawn in NpcSpawns)
             SpawnNpc(spawn.NpcType, spawn.X, spawn.Y, spawn.Height, spawn.MoveRangeX1, spawn.MoveRangeY1, spawn.MoveRangeX2, spawn.MoveRangeY2, true);
+
+        LoadedObjects.Clear();
+        LoadedObjects.AddRange(_objectLoader.LoadFile(objectPath));
 
         _worldLoaded = true;
     }

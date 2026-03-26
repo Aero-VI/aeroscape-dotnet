@@ -7,6 +7,13 @@ namespace AeroScape.Server.Core.Services;
 
 public sealed class ConstructionService
 {
+    private readonly IClientUiService _ui;
+
+    public ConstructionService(IClientUiService ui)
+    {
+        _ui = ui;
+    }
+
     public static readonly int[,] RoomInfo =
     {
         {1864, 5056, 0, 0},
@@ -54,6 +61,7 @@ public sealed class ConstructionService
 
     public bool AddRoom(Player player, int roomId)
     {
+        EnsureLoaded(player);
         if (roomId < 0 || roomId + 1 >= RoomInfo.GetLength(0))
             return false;
 
@@ -64,12 +72,14 @@ public sealed class ConstructionService
 
         var house = _houses.GetOrAdd(player.PersistentId, _ => new HouseState());
         house.Rooms.Add(roomId + 1);
+        Save(player, house);
         DeleteItem(player, 995, price);
         return true;
     }
 
     public bool AddFurniture(Player player, int level, int[] items, int[] amounts, int spot, int objectId, bool needCan)
     {
+        EnsureLoaded(player);
         if (player.SkillLvl[22] < level)
             return false;
 
@@ -93,13 +103,53 @@ public sealed class ConstructionService
 
         var house = _houses.GetOrAdd(player.PersistentId, _ => new HouseState());
         house.Furniture[spot] = objectId;
+        Save(player, house);
         return true;
     }
 
     public void RemoveFurniture(Player player, int spot)
     {
         if (_houses.TryGetValue(player.PersistentId, out var house))
+        {
             house.Furniture.Remove(spot);
+            Save(player, house);
+        }
+    }
+
+    public void HandleBuildClick(Player player, int x, int y, int objectId)
+    {
+        player.LastObjectX = x;
+        player.LastObjectY = y;
+        player.ConstInterface = objectId;
+
+        switch (objectId)
+        {
+            case 15314:
+            case 15307:
+            case 15308:
+                _ui.ShowInterface(player, 402);
+                break;
+            case 13431:
+            case 13432:
+            case 13433:
+                RemoveFurniture(player, 1);
+                break;
+            case 13434:
+            case 13435:
+            case 13436:
+                RemoveFurniture(player, 2);
+                break;
+            case 13425:
+            case 13426:
+            case 13427:
+                RemoveFurniture(player, 3);
+                break;
+            case 13428:
+            case 13429:
+            case 13430:
+                RemoveFurniture(player, 4);
+                break;
+        }
     }
 
     private static int CountItem(Player player, int itemId)
@@ -161,5 +211,43 @@ public sealed class ConstructionService
     {
         public List<int> Rooms { get; } = [];
         public Dictionary<int, int> Furniture { get; } = [];
+    }
+
+    private void EnsureLoaded(Player player)
+    {
+        if (_houses.ContainsKey(player.PersistentId))
+            return;
+
+        var house = new HouseState();
+        if (!string.IsNullOrWhiteSpace(player.ConstructionRoomsData))
+        {
+            foreach (var part in player.ConstructionRoomsData.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (int.TryParse(part, out var room))
+                    house.Rooms.Add(room);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(player.ConstructionFurnitureData))
+        {
+            foreach (var part in player.ConstructionFurnitureData.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pieces = part.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                if (pieces.Length == 2 &&
+                    int.TryParse(pieces[0], out var spot) &&
+                    int.TryParse(pieces[1], out var objectId))
+                {
+                    house.Furniture[spot] = objectId;
+                }
+            }
+        }
+
+        _houses[player.PersistentId] = house;
+    }
+
+    private static void Save(Player player, HouseState house)
+    {
+        player.ConstructionRoomsData = string.Join(',', house.Rooms);
+        player.ConstructionFurnitureData = string.Join(',', house.Furniture.Select(pair => $"{pair.Key}:{pair.Value}"));
     }
 }

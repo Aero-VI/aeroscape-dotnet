@@ -46,7 +46,7 @@ public sealed class PacketRouter
         Reg(new WalkDecoder(),           49, 119, 138);
         Reg(new PublicChatDecoder(),      222);
         Reg(new CommandDecoder(),         107);
-        Reg(new ActionButtonsDecoder(),   21, 113, 169, 173, 232, 233);
+        Reg(new ActionButtonsDecoder(),   21, 113, 169, 173, 214, 232, 233);
         Reg(new EquipItemDecoder(),       3);
         Reg(new ItemOperateDecoder(),     186);
         Reg(new DropItemDecoder(),        211);
@@ -84,8 +84,16 @@ public sealed class PacketRouter
         Reg(new ObjectExamineDecoder(),   84);
         Reg(new TradeAcceptDecoder(),     253);
 
-        // Legacy PacketManager paths that are currently consume-and-ignore in the C# port.
-        Reg(new NoOpDecoder(),            42, 43, 62, 99, 117, 127, 189, 190, 200, 247, 248);
+        // Legacy PacketManager paths.
+        Reg(new ClanJoinDecoder(),        42);
+        Reg(new StringInputDecoder(),     127);
+        Reg(new ItemOption2Decoder(),     117);
+        Reg(new BountyHunterDecoder(),    247);
+        Reg(new PrayerDecoder(),          248);
+        Reg(new LongInputDecoder(),       189);
+        Reg(new ConstructionDecoder(),    190);
+        Reg(new ClanKickDecoder(),        200);
+        Reg(new NoOpDecoder(),            43, 62, 99);
     }
 
     /// <summary>

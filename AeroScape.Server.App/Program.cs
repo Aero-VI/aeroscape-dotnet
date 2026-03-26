@@ -62,12 +62,14 @@ builder.Services.AddSingleton<PrayerService>();
 builder.Services.AddSingleton<DeathService>();
 builder.Services.AddSingleton<LegacyFileManager>();
 builder.Services.AddSingleton<MagicService>();
+builder.Services.AddSingleton<IClientUiService, ClientUiService>();
 builder.Services.AddSingleton<ClanChatService>();
 builder.Services.AddSingleton<BountyHunterService>();
 builder.Services.AddSingleton<ConstructionService>();
 builder.Services.AddSingleton<CastleWarsService>();
 builder.Services.AddSingleton<DialogueService>();
 builder.Services.AddSingleton<ObjectInteractionService>();
+builder.Services.AddSingleton<ObjectLoaderService>();
 builder.Services.AddSingleton<CommandService>();
 builder.Services.AddSingleton<NpcSpawnLoader>();
 builder.Services.AddSingleton<GameEngine>();
@@ -124,6 +126,11 @@ builder.Services.AddScoped<IMessageHandler<BountyHunterMessage>, BountyHunterMes
 builder.Services.AddScoped<IMessageHandler<ClanChatMessage>, ClanChatMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<PrayerMessage>, PrayerMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemOption2Message>, ItemOption2MessageHandler>();
+builder.Services.AddScoped<IMessageHandler<ClanJoinMessage>, ClanJoinMessageHandler>();
+builder.Services.AddScoped<IMessageHandler<StringInputMessage>, StringInputMessageHandler>();
+builder.Services.AddScoped<IMessageHandler<LongInputMessage>, LongInputMessageHandler>();
+builder.Services.AddScoped<IMessageHandler<ClanKickMessage>, ClanKickMessageHandler>();
+builder.Services.AddScoped<IMessageHandler<ConstructionMessage>, ConstructionMessageHandler>();
 
 // Inline-handled packet handlers (formerly processed in PacketManager.parsePacket)
 builder.Services.AddScoped<IMessageHandler<AddFriendMessage>, AddFriendMessageHandler>();

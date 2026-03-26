@@ -96,6 +96,7 @@ public sealed class PlayerLoginService : IPlayerLoginService
             PersistentId = db.Id,
             Username = db.Username,
             Password = db.PasswordHash,
+            PasswordHash = db.PasswordHash,
             Rights = db.Rights,
             AbsX = db.AbsX,
             AbsY = db.AbsY,
@@ -121,6 +122,10 @@ public sealed class PlayerLoginService : IPlayerLoginService
             BandosKillCount = db.BandosKillCount,
             ArmadylKillCount = db.ArmadylKillCount,
             SaradominKillCount = db.SaradominKillCount,
+            HouseDecor = db.HouseDecor,
+            HouseHeight = db.HouseHeight,
+            ConstructionRoomsData = db.ConstructionRoomsData,
+            ConstructionFurnitureData = db.ConstructionFurnitureData,
             FamiliarType = db.FamiliarType,
             ClanName = db.ClanName,
         };

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
+using AeroScape.Server.Core.Items;
 
 namespace AeroScape.Server.Core.Services;
 
@@ -10,12 +11,15 @@ public sealed record ShopStock(int[] Items, int[] DefaultAmounts, int[] Prices);
 public sealed class ShopService
 {
     private readonly InventoryService _inventory;
+    private readonly ItemDefinitionLoader _items;
+    private readonly IClientUiService _ui;
     private long _lastRestockTicks = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     private int _counter;
 
     public IReadOnlyDictionary<int, ShopStock> Definitions => _definitions;
     private readonly Dictionary<int, ShopStock> _definitions = new()
     {
+        [1] = new(CreateEmptyItems(40), Fill(40, 0), Fill(40, 0)),
         [2] = new(new[] { 590, 946, 1359, 1275, 12844, 301, 305, 307, 311, 11259 }, Fill(10, 100), new[] { 1, 1, 1, 1, 60, 1, 1, 1, 1, 1 }),
         [3] = new(new[] { 1135, 1099, 1065, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 10382, 10378, 10380, 10376, 10390, 10386, 10388, 10384, 10374, 10370, 10372, 10368, 2581, 2577, -1 }, Fill(27, 100), new[] { 100, 100, 100, 205, 205, 205, 400, 400, 400, 605, 605, 605, 800, 800, 800, 800, 300, 800, 800, 800, 800, 800, 800, 800, 905, 905, 0 }),
         [4] = new(new[] { 11335, 11283, 11732, 3140, 4087, 1187, 4151, 391, 1305, 4587, 5698, 10828, 1149, 8850, 121, 113, 11758, 4675 }, Fill(18, 100), new[] { 15000, 34500, 3500, 50000, 25000, 13500, 16000, 500, 950, 1000, 1000, 3500, 5000, 2500, 350, 350, 5000, 12500 }),
@@ -30,16 +34,23 @@ public sealed class ShopService
         [13] = new(new[] { 7806, 7807, 7808, 7809, 6106, 6107, 6108, 6109, 6110, 6111, 4345, 6856, 6857, 6858, 6859, 6860, 6861, 6862, 6863, 8942, 3101, 1361, 1231, 1337, 4353, 1203, 4331 }, Fill(27, 100), new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10 }),
         [14] = new(new[] { 4566, 5553, 5554, 5555, 5556, 5557, 2653, 2655, 2657, 2659, 2661, 2663, 2665, 2667, 2669, 2671, 2673, 2675, 3481, 3483, 3486, 3488, 12222, 534, 3101, 1337, 1361 }, new[] { 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 1, 5, 5 }, new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1000, 1000, 5000 }),
         [16] = new(new[] { 8798, 8799, 8800, 8802, 8803 }, Fill(5, 10), Fill(5, 5000)),
+        [17] = new(CreateEmptyItems(40), Fill(40, 0), Fill(40, 0)),
         [18] = new(new[] { 4089, 4091, 4093, 4095, 4097, 4099, 4101, 4103, 4105, 4107, 4109, 4111, 4113, 4115, 4117, 6918, 6916, 6920, 6922, 6924, 3840, 3842, 3844, 6889, 4675, 6908, 6910, 6912, 6914 }, Fill(29, 100), Fill(29, 100)),
     };
 
     private readonly Dictionary<int, int[]> _runtimeAmounts = new();
+    private readonly Dictionary<int, int[]> _runtimeItems = new();
 
-    public ShopService(InventoryService inventory)
+    public ShopService(InventoryService inventory, ItemDefinitionLoader items, IClientUiService ui)
     {
         _inventory = inventory;
+        _items = items;
+        _ui = ui;
         foreach (var pair in _definitions)
+        {
             _runtimeAmounts[pair.Key] = (int[])pair.Value.DefaultAmounts.Clone();
+            _runtimeItems[pair.Key] = (int[])pair.Value.Items.Clone();
+        }
     }
 
     public void Process(GameEngine engine)
@@ -50,6 +61,9 @@ public sealed class ShopService
 
         foreach (var pair in _definitions)
         {
+            if (pair.Key is 1 or 17)
+                continue;
+
             var stock = pair.Value;
             var amounts = _runtimeAmounts[pair.Key];
             for (int i = 0; i < amounts.Length && i < stock.DefaultAmounts.Length; i++)
@@ -60,6 +74,12 @@ public sealed class ShopService
         }
 
         _counter++;
+        if (_counter > 15)
+        {
+            RestockDynamicShop(1);
+            RestockDynamicShop(17);
+            _counter = 0;
+        }
         _lastRestockTicks = now;
     }
 
@@ -70,9 +90,14 @@ public sealed class ShopService
 
         player.PartyShop = shopId == 17;
         player.ShopId = shopId;
-        player.InterfaceId = 620;
-        player.ShopItems = stock.Items;
+        player.ShopItems = _runtimeItems[shopId];
         player.ShopItemsN = _runtimeAmounts[shopId];
+        _ui.OpenShop(player, shopId switch
+        {
+            1 => "General Store",
+            17 => "Party Room",
+            _ => "General Store"
+        });
         return true;
     }
 
@@ -81,7 +106,7 @@ public sealed class ShopService
         if (!_definitions.TryGetValue(player.ShopId, out var stock))
             return false;
 
-        int slot = Array.IndexOf(stock.Items, itemId);
+        int slot = Array.IndexOf(player.ShopItems, itemId);
         if (slot < 0 || slot >= player.ShopItemsN.Length)
             return false;
 
@@ -104,19 +129,48 @@ public sealed class ShopService
         }
 
         player.ShopItemsN[slot] -= amount;
+        if (player.ShopId is 1 or 17 && player.ShopItemsN[slot] <= 0)
+        {
+            player.ShopItems[slot] = -1;
+            player.ShopItemsN[slot] = 0;
+        }
+
+        _ui.RefreshShop(player);
         return true;
     }
 
     public bool Sell(Player player, int itemId, int amount)
     {
+        if (itemId == 995 && !player.PartyShop)
+            return false;
+
         if (_inventory.Count(player, itemId) < amount)
             return false;
 
-        int price = Math.Max(1, (int)(GetPrice(player.ShopId, Array.IndexOf(player.ShopItems, itemId)) * 0.75));
+        int slot = Array.IndexOf(player.ShopItems, itemId);
+        bool shopShouldBuy = slot >= 0 || player.ShopId is 1 or 17;
+        if (!shopShouldBuy)
+            return false;
+
+        if (slot < 0)
+        {
+            slot = FindFreeSlot(player.ShopItems);
+            if (slot < 0)
+                return false;
+
+            player.ShopItems[slot] = itemId;
+            player.ShopItemsN[slot] = 0;
+        }
+
+        int price = Math.Max(1, (int)(GetPrice(player.ShopId, slot) * 0.75));
         if (!_inventory.DeleteItem(player, itemId, amount))
             return false;
 
-        _inventory.AddItem(player, 995, price * amount);
+        player.ShopItemsN[slot] += amount;
+        if (!player.PartyShop)
+            _inventory.AddItem(player, 995, price * amount);
+
+        _ui.RefreshShop(player);
         return true;
     }
 
@@ -124,7 +178,14 @@ public sealed class ShopService
     {
         if (!_definitions.TryGetValue(shopId, out var stock))
             return 1;
-        if (slot < 0 || slot >= stock.Prices.Length)
+        if (slot < 0)
+            return 1;
+        if (shopId is 1 or 17)
+        {
+            var itemId = _runtimeItems[shopId][slot];
+            return Math.Max(_items.Get(itemId)?.ShopValue ?? 1, 1);
+        }
+        if (slot >= stock.Prices.Length)
             return 1;
         return Math.Max(stock.Prices[slot], 1);
     }
@@ -134,5 +195,45 @@ public sealed class ShopService
         var result = new int[count];
         Array.Fill(result, value);
         return result;
+    }
+
+    private static int[] CreateEmptyItems(int count)
+    {
+        var result = new int[count];
+        Array.Fill(result, -1);
+        return result;
+    }
+
+    private void RestockDynamicShop(int shopId)
+    {
+        var items = _runtimeItems[shopId];
+        var amounts = _runtimeAmounts[shopId];
+        for (int i = 0; i < amounts.Length; i++)
+        {
+            if (amounts[i] <= 0)
+            {
+                items[i] = -1;
+                amounts[i] = 0;
+                continue;
+            }
+
+            amounts[i]--;
+            if (amounts[i] <= 0)
+            {
+                items[i] = -1;
+                amounts[i] = 0;
+            }
+        }
+    }
+
+    private static int FindFreeSlot(int[] items)
+    {
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] == -1)
+                return i;
+        }
+
+        return -1;
     }
 }

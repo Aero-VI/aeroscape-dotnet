@@ -1,12 +1,21 @@
 using System;
 using System.Collections.Concurrent;
+using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
 
 namespace AeroScape.Server.Core.Services;
 
 public sealed class ClanChatService
 {
+    private readonly GameEngine _engine;
+    private readonly IClientUiService _ui;
     private readonly ConcurrentDictionary<string, ClanChannel> _channels = new(StringComparer.OrdinalIgnoreCase);
+
+    public ClanChatService(GameEngine engine, IClientUiService ui)
+    {
+        _engine = engine;
+        _ui = ui;
+    }
 
     public void CreateOrRenameChat(Player owner, string clanName)
     {
@@ -20,19 +29,30 @@ public sealed class ClanChatService
             });
 
         owner.ClanName = channel.ClanName;
+        _ui.SendMessage(owner, $"You changed the name of your clan to: {channel.ClanName}");
     }
 
     public bool JoinChat(Player player, string ownerName)
     {
-        if (!_channels.TryGetValue(ownerName, out var channel) || string.IsNullOrWhiteSpace(channel.ClanName))
-            return false;
+        LeaveChat(player);
 
-        if (channel.JoinRequirement > GetRank(channel, player.Username))
+        if (!_channels.TryGetValue(ownerName, out var channel))
+        {
+            int ownerId = _engine.GetIdFromName(ownerName);
+            var owner = ownerId > 0 ? _engine.Players[ownerId] : null;
+            if (owner is null)
+                return false;
+
+            channel = _channels.GetOrAdd(owner.Username, _ => new ClanChannel(owner.Username, string.IsNullOrWhiteSpace(owner.ClanName) ? owner.Username : owner.ClanName));
+        }
+
+        if (string.IsNullOrWhiteSpace(channel.ClanName) || channel.JoinRequirement > GetRank(channel, player.Username))
             return false;
 
         channel.Members[player.Username] = new ClanMember(player.Username);
         player.ClanName = channel.ClanName;
         player.ClanChannel = 1;
+        _ui.SendMessage(player, $"You are now talking in: {channel.ClanName}");
         return true;
     }
 
@@ -42,6 +62,7 @@ public sealed class ClanChatService
             channel.Members.TryRemove(player.Username, out _);
 
         player.ClanChannel = 0;
+        _ui.ResetClanChatList(player);
     }
 
     public bool SendMessage(Player player, string message)
@@ -55,6 +76,13 @@ public sealed class ClanChatService
                 return false;
 
             channel.LastMessage = (player.Username, message);
+            foreach (var member in channel.Members.Values)
+            {
+                int id = _engine.GetIdFromName(member.Name);
+                var target = id > 0 ? _engine.Players[id] : null;
+                if (target is not null)
+                    _ui.SendClanChat(target, player, channel.ClanName, message);
+            }
             return true;
         }
 
@@ -67,6 +95,26 @@ public sealed class ClanChatService
             return;
 
         channel.Ranks[name] = rank;
+    }
+
+    public bool Kick(Player owner, string name)
+    {
+        if (!_channels.TryGetValue(owner.Username, out var channel))
+            return false;
+
+        if (!channel.Members.TryRemove(name, out _))
+            return false;
+
+        int id = _engine.GetIdFromName(name);
+        var target = id > 0 ? _engine.Players[id] : null;
+        if (target is not null)
+        {
+            target.ClanChannel = 0;
+            _ui.SendMessage(target, "You've been kick from the chat.");
+            _ui.ResetClanChatList(target);
+        }
+
+        return true;
     }
 
     public void SetRequirement(Player owner, int requirementType, int value)

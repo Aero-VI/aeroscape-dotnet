@@ -13,12 +13,14 @@ public class NPCOption2MessageHandler : IMessageHandler<NPCOption2Message>
     private readonly ILogger<NPCOption2MessageHandler> _logger;
     private readonly GameEngine _engine;
     private readonly ShopService _shops;
+    private readonly IClientUiService _ui;
 
-    public NPCOption2MessageHandler(ILogger<NPCOption2MessageHandler> logger, GameEngine engine, ShopService shops)
+    public NPCOption2MessageHandler(ILogger<NPCOption2MessageHandler> logger, GameEngine engine, ShopService shops, IClientUiService ui)
     {
         _logger = logger;
         _engine = engine;
         _shops = shops;
+        _ui = ui;
     }
 
     public Task HandleAsync(PlayerSession session, NPCOption2Message message, CancellationToken cancellationToken)
@@ -42,13 +44,13 @@ public class NPCOption2MessageHandler : IMessageHandler<NPCOption2Message>
                 _shops.OpenShop(player, 11);
                 break;
             case 549:
-                _shops.OpenShop(player, 13);
+                _shops.OpenShop(player, 5);
                 break;
             case 548:
-                _shops.OpenShop(player, 14);
+                _shops.OpenShop(player, 6);
                 break;
             case 521:
-                _shops.OpenShop(player, 5);
+                _shops.OpenShop(player, 2);
                 break;
             case 682:
                 _shops.OpenShop(player, 3);
@@ -56,8 +58,7 @@ public class NPCOption2MessageHandler : IMessageHandler<NPCOption2Message>
             case 494:
             case 495:
             case 2619:
-            case 2270:
-                player.InterfaceId = 762;
+                _ui.OpenBank(player);
                 break;
         }
 

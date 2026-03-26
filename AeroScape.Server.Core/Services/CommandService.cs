@@ -1,4 +1,6 @@
 using System;
+using System.Security.Cryptography;
+using System.Text;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Session;
@@ -11,13 +13,15 @@ public sealed class CommandService
     private readonly InventoryService _inventory;
     private readonly ShopService _shops;
     private readonly IPlayerSessionManager _sessions;
+    private readonly IClientUiService _ui;
 
-    public CommandService(GameEngine engine, InventoryService inventory, ShopService shops, IPlayerSessionManager sessions)
+    public CommandService(GameEngine engine, InventoryService inventory, ShopService shops, IPlayerSessionManager sessions, IClientUiService ui)
     {
         _engine = engine;
         _inventory = inventory;
         _shops = shops;
         _sessions = sessions;
+        _ui = ui;
     }
 
     public bool Execute(Player player, string command, string[] args, string raw)
@@ -67,14 +71,18 @@ public sealed class CommandService
                 player.HouseLocked = false;
                 return true;
             case "male":
+                player.Look = [3, 16, 18, 28, 34, 38, 42];
                 player.Gender = 0;
                 player.AppearanceUpdateReq = true;
                 player.UpdateReq = true;
+                _ui.SendMessage(player, "You are now male.");
                 return true;
             case "female":
+                player.Look = [48, 1000, 57, 64, 68, 77, 80];
                 player.Gender = 1;
                 player.AppearanceUpdateReq = true;
                 player.UpdateReq = true;
+                _ui.SendMessage(player, "You are now female.");
                 return true;
             case "afk":
                 player.RequestForceChat("AFK BRB!");
@@ -84,12 +92,18 @@ public sealed class CommandService
                 return true;
             case "changepass":
                 if (args.Length > 0)
+                {
                     player.Password = args[0];
+                    player.PasswordHash = HashPassword(args[0]);
+                    _ui.SendMessage(player, $"Your new pass is {args[0]}");
+                }
                 return true;
             case "players":
+                _ui.SendMessage(player, $"There are currently {_engine.GetPlayerCount()} players online.");
                 return true;
             case "commands":
             case "help":
+                _ui.SendMessage(player, "::home ::cw ::wildy ::party ::gwd ::assault ::house ::players ::coords ::yell");
                 return true;
             case "bank":
                 player.InterfaceId = 762;
@@ -119,6 +133,9 @@ public sealed class CommandService
                 player.IsAncients = 0;
                 return true;
             case "yell":
+                if (args.Length == 0)
+                    return false;
+                Broadcast($"[Server] {player.Username}: {string.Join(' ', args)}");
                 return true;
         }
 
@@ -162,6 +179,7 @@ public sealed class CommandService
                     }
                     return true;
                 case "coords":
+                    _ui.SendMessage(player, $"Coords: {player.AbsX}, {player.AbsY}, {player.HeightLevel}");
                     return true;
                 case "item":
                     if (args.Length >= 2 &&
@@ -243,6 +261,22 @@ public sealed class CommandService
         }
 
         return false;
+    }
+
+    private void Broadcast(string message)
+    {
+        for (int i = 1; i < _engine.Players.Length; i++)
+        {
+            var target = _engine.Players[i];
+            if (target is { Online: true })
+                _ui.SendMessage(target, message);
+        }
+    }
+
+    private static string HashPassword(string password)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     private bool SetTarget(string[] args, Action<Player> action)

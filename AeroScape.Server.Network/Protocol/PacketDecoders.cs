@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Text;
 using AeroScape.Server.Core.Messages;
 using AeroScape.Server.Core.Session;
+using AeroScape.Server.Core.Util;
 
 namespace AeroScape.Server.Network.Protocol;
 
@@ -720,6 +721,88 @@ public sealed class NoOpDecoder : IPacketDecoder
     public Type MessageType => typeof(IdleMessage);
 
     public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload) => null;
+}
+
+public sealed class ClanJoinDecoder : IPacketDecoder
+{
+    public Type MessageType => typeof(ClanJoinMessage);
+
+    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    {
+        var r = new RsReader(payload);
+        return new ClanJoinMessage(NameUtil.LongToString(r.ReadQWord()).Replace('_', ' '));
+    }
+}
+
+public sealed class StringInputDecoder : IPacketDecoder
+{
+    public Type MessageType => typeof(StringInputMessage);
+
+    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    {
+        var r = new RsReader(payload);
+        return new StringInputMessage(r.ReadString());
+    }
+}
+
+public sealed class LongInputDecoder : IPacketDecoder
+{
+    public Type MessageType => typeof(LongInputMessage);
+
+    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    {
+        var r = new RsReader(payload);
+        return new LongInputMessage(r.ReadQWord());
+    }
+}
+
+public sealed class ClanKickDecoder : IPacketDecoder
+{
+    public Type MessageType => typeof(ClanKickMessage);
+
+    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    {
+        var r = new RsReader(payload);
+        return new ClanKickMessage(NameUtil.LongToString(r.ReadQWord()).Replace('_', ' '));
+    }
+}
+
+public sealed class ConstructionDecoder : IPacketDecoder
+{
+    public Type MessageType => typeof(ConstructionMessage);
+
+    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    {
+        var r = new RsReader(payload);
+        int y = r.ReadUnsignedWordBigEndian();
+        int x = r.ReadUnsignedWordBigEndianA();
+        int objectId = r.ReadUnsignedWordBigEndianA();
+        return new ConstructionMessage(x, y, objectId);
+    }
+}
+
+public sealed class PrayerDecoder : IPacketDecoder
+{
+    public Type MessageType => typeof(PrayerMessage);
+
+    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    {
+        var r = new RsReader(payload);
+        int buttonId = payload.Length >= 2 ? r.ReadUnsignedWord() : r.ReadByte();
+        return new PrayerMessage(buttonId);
+    }
+}
+
+public sealed class BountyHunterDecoder : IPacketDecoder
+{
+    public Type MessageType => typeof(BountyHunterMessage);
+
+    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
+    {
+        var r = new RsReader(payload);
+        int targetId = payload.Length >= 2 ? r.ReadUnsignedWord() : r.ReadByte();
+        return new BountyHunterMessage(targetId);
+    }
 }
 
 /// <summary>Idle: opcode 47 (0 bytes).</summary>
