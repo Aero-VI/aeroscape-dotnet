@@ -323,21 +323,26 @@ public static class LoginFrames
                      xCalc != 50 && (xCalc != 49 || yCalc != 47)))
                 {
                     int[]? keys = mapData.GetMapData(region);
-                    if (keys != null)
+                    if (keys == null)
                     {
-                        w.WriteDWord(keys[0]);
-                        w.WriteDWord(keys[1]);
-                        w.WriteDWord(keys[2]);
-                        w.WriteDWord(keys[3]);
+                        // Missing XTEA keys — teleport player to Varrock and abort region frame
+                        // (matches Java Frames.java:1127-1131)
+                        p.SetCoords(3254, 3420, 0);
+                        // Recalculate region vars for the safe location
+                        p.MapRegionX = (p.AbsX >> 3);
+                        p.MapRegionY = (p.AbsY >> 3);
+                        p.CurrentX = p.AbsX - 8 * (p.MapRegionX - 6);
+                        p.CurrentY = p.AbsY - 8 * (p.MapRegionY - 6);
+                        // Discard the partial frame and restart with the safe region
+                        w.Dispose();
+                        w = new FrameWriter(8192);
+                        WriteMapRegion(w, p, mapData);
+                        return;
                     }
-                    else
-                    {
-                        // No XTEA keys for this region — send zeroes (client treats as unencrypted)
-                        w.WriteDWord(0);
-                        w.WriteDWord(0);
-                        w.WriteDWord(0);
-                        w.WriteDWord(0);
-                    }
+                    w.WriteDWord(keys[0]);
+                    w.WriteDWord(keys[1]);
+                    w.WriteDWord(keys[2]);
+                    w.WriteDWord(keys[3]);
                 }
             }
         }

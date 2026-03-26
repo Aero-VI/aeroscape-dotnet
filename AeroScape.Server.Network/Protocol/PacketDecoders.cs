@@ -454,10 +454,13 @@ public sealed class ObjectOption2Decoder : IPacketDecoder
 
     public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
     {
+        // Opcode 228 is 6 bytes: word (unused/playerId) + word (objectX) + word (objectY)
+        // The actual objectId is read later in the handler after distance check (Java ObjectOption2.java:56)
         var r = new RsReader(payload);
         int firstWord = r.ReadUnsignedWord();
-        int objectId = r.ReadUnsignedWord();
-        return new ObjectOption2Message(objectId, firstWord, 0);
+        int objectX = r.ReadUnsignedWord();
+        int objectY = r.ReadUnsignedWord();
+        return new ObjectOption2Message(firstWord, objectX, objectY);
     }
 }
 

@@ -87,9 +87,8 @@ public sealed class PacketRouter
         // Legacy PacketManager paths.
         Reg(new ClanJoinDecoder(),        42);
         Reg(new StringInputDecoder(),     127);
-        Reg(new ItemOption2Decoder(),     117);
-        Reg(new BountyHunterDecoder(),    247);
-        Reg(new PrayerDecoder(),          248);
+        // 117, 247, 248 are skillcape-trim/no-op packets in Java PacketManager
+        Reg(new NoOpDecoder(),            117, 247, 248);
         Reg(new LongInputDecoder(),       189);
         Reg(new ConstructionDecoder(),    190);
         Reg(new ClanKickDecoder(),        200);
@@ -134,12 +133,9 @@ public sealed class PacketRouter
             if (!reader.TryRead(out byte rawOpcode))
                 break;
 
-            // Decrypt the opcode using the session's ISAAC cipher (RS 508 protocol).
-            // The client encrypts opcodes with its ISAAC instance; the server must
-            // subtract the next ISAAC value to recover the real opcode.
-            int opcode = session.InCipher is not null
-                ? (rawOpcode - session.InCipher.NextInt()) & 0xFF
-                : rawOpcode & 0xFF;
+            // RS 508 protocol: the Java server reads raw opcodes without ISAAC decryption.
+            // The client does NOT encrypt post-login packet opcodes with ISAAC in this revision.
+            int opcode = rawOpcode & 0xFF;
 
             if ((uint)opcode >= ProtocolDictionary.Incoming.Length)
             {
