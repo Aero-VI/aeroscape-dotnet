@@ -6,13 +6,18 @@ using Serilog;
 using AeroScape.Server.App.Services;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Handlers;
+using AeroScape.Server.Core.Items;
 using AeroScape.Server.Core.Messages;
+using AeroScape.Server.Core.Movement;
 using AeroScape.Server.Core.Session;
+using AeroScape.Server.Core.Services;
 using AeroScape.Server.Data;
 using AeroScape.Server.Core.World;
 using AeroScape.Server.Network.Listeners;
+using AeroScape.Server.Network.Frames;
 using AeroScape.Server.Network.Login;
 using AeroScape.Server.Network.Protocol;
+using AeroScape.Server.Network.Update;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -44,11 +49,30 @@ builder.Services.AddDbContext<AeroScapeDbContext>(options =>
 
 // ── Core services ───────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IPlayerSessionManager, PlayerSessionManager>();
+builder.Services.AddSingleton<ItemDefinitionLoader>();
+builder.Services.AddSingleton<InventoryService>();
+builder.Services.AddSingleton<PlayerItemsService>();
+builder.Services.AddSingleton<PlayerEquipmentService>();
+builder.Services.AddSingleton<PlayerBankService>();
+builder.Services.AddSingleton<TradingService>();
+builder.Services.AddSingleton<GroundItemManager>();
+builder.Services.AddSingleton<WalkQueue>();
+builder.Services.AddSingleton<ShopService>();
+builder.Services.AddSingleton<PrayerService>();
+builder.Services.AddSingleton<DeathService>();
+builder.Services.AddSingleton<DialogueService>();
+builder.Services.AddSingleton<ObjectInteractionService>();
+builder.Services.AddSingleton<CommandService>();
+builder.Services.AddSingleton<NpcSpawnLoader>();
 builder.Services.AddSingleton<GameEngine>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<GameEngine>());
 
 // ── Map data service ─────────────────────────────────────────────────────────
 builder.Services.AddSingleton<MapDataService>();
+builder.Services.AddSingleton<GameFrames>();
+builder.Services.AddSingleton<PlayerUpdateWriter>();
+builder.Services.AddSingleton<NpcUpdateWriter>();
+builder.Services.AddSingleton<IGameUpdateService, GameUpdateService>();
 
 // ── Login service ────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IPlayerLoginService, PlayerLoginService>();
@@ -108,6 +132,9 @@ builder.Services.AddScoped<IMessageHandler<ObjectExamineMessage>, ObjectExamineM
 builder.Services.AddScoped<IMessageHandler<TradeAcceptMessage>, TradeAcceptMessageHandler>();
 
 var host = builder.Build();
+
+host.Services.GetRequiredService<GameEngine>().GameUpdateService =
+    host.Services.GetRequiredService<IGameUpdateService>();
 
 // Ensure database is created (dev convenience — use migrations in production)
 using (var scope = host.Services.CreateScope())

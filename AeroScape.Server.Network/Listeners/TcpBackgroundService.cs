@@ -114,7 +114,6 @@ public sealed class TcpBackgroundService : BackgroundService
             session.InitIsaac(loginResult.IsaacSeed);
 
             // Register player in the game engine
-            player.InitDefaults();
             // Restore position (defaults from DB or spawn point)
             if (player.AbsX == 0 && player.AbsY == 0)
             {
@@ -122,8 +121,10 @@ public sealed class TcpBackgroundService : BackgroundService
                 player.AbsY = 3219;
             }
             player.Online = true;
+            player.UsingHd = loginResult.UsingHD;
             _engine.AddPlayer(player, slot);
             session.Entity = player;
+            player.Session = session;
 
             _logger.LogInformation("Session {Id}: '{User}' logged in (slot {Slot})",
                 session.SessionId, loginResult.Username, slot);
@@ -151,6 +152,7 @@ public sealed class TcpBackgroundService : BackgroundService
             // Clean up game engine slot
             if (session.Entity is { } p && p.PlayerId > 0)
             {
+                p.Session = null;
                 _engine.RemovePlayer(p.PlayerId);
                 _logger.LogInformation("Player '{User}' removed from world", p.Username);
             }

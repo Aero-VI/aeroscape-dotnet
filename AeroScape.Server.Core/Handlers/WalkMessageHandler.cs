@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using AeroScape.Server.Core.Messages;
+using AeroScape.Server.Core.Movement;
 using AeroScape.Server.Core.Session;
 using Microsoft.Extensions.Logging;
 
@@ -13,10 +14,12 @@ namespace AeroScape.Server.Core.Handlers;
 public class WalkMessageHandler : IMessageHandler<WalkMessage>
 {
     private readonly ILogger<WalkMessageHandler> _logger;
+    private readonly WalkQueue _walkQueue;
 
-    public WalkMessageHandler(ILogger<WalkMessageHandler> logger)
+    public WalkMessageHandler(ILogger<WalkMessageHandler> logger, WalkQueue walkQueue)
     {
         _logger = logger;
+        _walkQueue = walkQueue;
     }
 
     public Task HandleAsync(PlayerSession session, WalkMessage message, CancellationToken cancellationToken)
@@ -25,44 +28,16 @@ public class WalkMessageHandler : IMessageHandler<WalkMessage>
         if (player is null)
             return Task.CompletedTask;
 
-        _logger.LogDebug("Player {Username} walking to ({X}, {Y}), running={Running}",
-            player.Username, message.X, message.Y, message.IsRunning);
+        _logger.LogDebug(
+            "Player {Username} walking: first=({X}, {Y}) steps={Steps} running={Running} opcode={Opcode}",
+            player.Username,
+            message.FirstX,
+            message.FirstY,
+            message.PathX.Length + 1,
+            message.IsRunning,
+            message.PacketId);
 
-        // TODO: Remove shown interface (p.frames.removeShownInterface)
-
-        // TODO: Reset walking queue via movement engine
-        // Engine.playerMovement.resetWalkingQueue(player);
-
-        // TODO: Add first step to walking queue
-        // Engine.playerMovement.addToWalkingQueue(player, firstX, firstY);
-        // Then add remaining path steps (pathX[i] + firstX, pathY[i] + firstY)
-
-        // Reset interaction flags
-        // TODO: These flags need to be added to Player entity:
-        // player.ItemPickup = false;
-        // player.PlayerOption1 = false;
-        // player.PlayerOption2 = false;
-        // player.PlayerOption3 = false;
-        // player.NpcOption1 = false;
-        // player.NpcOption2 = false;
-        // player.ObjectOption1 = false;
-        // player.ObjectOption2 = false;
-        // player.AttackingPlayer = false;
-        // player.AttackingNpc = false;
-
-        // TODO: Check freeze delay
-        // if (player.FreezeDelay > 0)
-        //     session.SendMessage("You can't move! You're frozen!");
-
-        // TODO: Restore client state
-        // session.RemoveShownInterface();
-        // session.RestoreTabs();
-        // session.RestoreInventory();
-        // session.RemoveChatboxInterface();
-
-        // TODO: Reset face-to target
-        // if (player.FaceToRequest != 65535)
-        //     player.RequestFaceTo(65535);
+        _walkQueue.HandleWalk(player, message);
 
         return Task.CompletedTask;
     }

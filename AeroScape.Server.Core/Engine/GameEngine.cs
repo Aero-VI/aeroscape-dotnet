@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using AeroScape.Server.Core.Combat;
 using AeroScape.Server.Core.Entities;
+using AeroScape.Server.Core.Items;
+using AeroScape.Server.Core.Movement;
+using AeroScape.Server.Core.Services;
 
 namespace AeroScape.Server.Core.Engine;
 
@@ -42,6 +46,8 @@ public class GameEngine : BackgroundService
 
     /// <summary>NPC slots. Index 0 is unused.</summary>
     public NPC?[] Npcs { get; } = new NPC?[MaxNpcs];
+    public Dictionary<int, NpcDefinition> NpcDefinitions { get; } = new();
+    public List<NpcSpawnDefinition> NpcSpawns { get; } = new();
 
     // ── Minigame / global timers (translated from Engine.java statics) ──────
     public int FightPitTimer { get; set; } = 120;
@@ -58,6 +64,14 @@ public class GameEngine : BackgroundService
     public int ZamorakP { get; set; }
 
     private readonly ILogger<GameEngine> _logger;
+    public IGameUpdateService? GameUpdateService { get; set; }
+    private readonly WalkQueue _walkQueue;
+    private readonly ShopService _shops;
+    private readonly PrayerService _prayers;
+    private readonly DeathService _deaths;
+    private readonly NpcSpawnLoader _npcSpawnLoader;
+    private readonly GroundItemManager _groundItems;
+    private bool _worldLoaded;
 
     // ── Combat services ─────────────────────────────────────────────────────
     public PlayerVsPlayerCombat PlayerCombat { get; }
@@ -68,9 +82,21 @@ public class GameEngine : BackgroundService
         ILogger<GameEngine> logger,
         ILogger<PlayerVsPlayerCombat> pvpLogger,
         ILogger<PlayerVsNpcCombat> pveLogger,
-        ILogger<NpcVsPlayerCombat> npcLogger)
+        ILogger<NpcVsPlayerCombat> npcLogger,
+        WalkQueue walkQueue,
+        ShopService shops,
+        PrayerService prayers,
+        DeathService deaths,
+        NpcSpawnLoader npcSpawnLoader,
+        GroundItemManager groundItems)
     {
         _logger = logger;
+        _walkQueue = walkQueue;
+        _shops = shops;
+        _prayers = prayers;
+        _deaths = deaths;
+        _npcSpawnLoader = npcSpawnLoader;
+        _groundItems = groundItems;
         PlayerCombat = new PlayerVsPlayerCombat(this, pvpLogger);
         PlayerNpcCombat = new PlayerVsNpcCombat(this, pveLogger);
         NpcPlayerCombat = new NpcVsPlayerCombat(this, npcLogger);
@@ -194,8 +220,7 @@ public class GameEngine : BackgroundService
         };
         n.RequestFaceCoords(n.AbsX, n.AbsY - 1);
 
-        // TODO: Phase 7+ — apply NPC definition stats from config
-        // (name, combatLevel, maxHP, maxHit, atkType, weakness, emotes, etc.)
+        _npcSpawnLoader.ApplyDefinition(n, NpcDefinitions);
 
         Npcs[index] = n;
         return index;
@@ -234,6 +259,7 @@ public class GameEngine : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("GameEngine starting — tick interval {Interval}ms", MajorTickInterval.TotalMilliseconds);
+        EnsureWorldLoaded();
 
         var stopwatch = new Stopwatch();
 
@@ -270,8 +296,12 @@ public class GameEngine : BackgroundService
     /// </summary>
     private void ProcessMajorTick()
     {
+        EnsureWorldLoaded();
+
         // ── 1. Global timers ────────────────────────────────────────────────
         ProcessGlobalTimers();
+        _groundItems.Process();
+        _shops.Process(this);
 
         // ── 2. Player per-tick processing & movement ────────────────────────
         for (int i = 1; i < Players.Length; i++)
@@ -290,11 +320,18 @@ public class GameEngine : BackgroundService
             // Per-player tick (timers, skills, combat delays, death, etc.)
             ProcessPlayerTick(p);
 
-            // Movement will be handled by PlayerMovement service (Phase 6+)
+            _walkQueue.Process(p);
         }
 
-        // ── 3. Player update encoding (stub — Phase 6) ─────────────────────
-        // PlayerUpdate.update(p) → will be called from network layer
+        // ── 3. Player update encoding ───────────────────────────────────────
+        for (int i = 1; i < Players.Length; i++)
+        {
+            var p = Players[i];
+            if (p == null || !p.Online)
+                continue;
+
+            GameUpdateService?.SendPlayerAndNpcUpdates(p);
+        }
 
         // ── 4. Clear player update masks ────────────────────────────────────
         for (int i = 1; i < Players.Length; i++)
@@ -303,7 +340,10 @@ public class GameEngine : BackgroundService
             if (p == null || !p.Online)
                 continue;
 
-            ClearPlayerUpdateReqs(p);
+            if (GameUpdateService != null)
+                GameUpdateService.ClearPlayerUpdateReqs(p);
+            else
+                ClearPlayerUpdateReqs(p);
         }
 
         // ── 5. NPC processing ───────────────────────────────────────────────
@@ -313,8 +353,10 @@ public class GameEngine : BackgroundService
             if (n == null)
                 continue;
 
-            // Clear masks first (matches Java ordering: clear → process)
-            n.ClearUpdateMasks();
+            if (GameUpdateService != null)
+                GameUpdateService.ClearNpcUpdateMasks(n);
+            else
+                n.ClearUpdateMasks();
         }
 
         for (int i = 1; i < Npcs.Length; i++)
@@ -331,7 +373,7 @@ public class GameEngine : BackgroundService
                 if (n.AttackingPlayer)
                     NpcPlayerCombat.ProcessAttack(n);
 
-                // Random walk handled by NpcMovement service (Phase 6+)
+                GameUpdateService?.ProcessNpcMovement(n);
             }
             else
             {
@@ -365,6 +407,24 @@ public class GameEngine : BackgroundService
         }
     }
 
+    private void EnsureWorldLoaded()
+    {
+        if (_worldLoaded)
+            return;
+
+        string npcListPath = Path.Combine(Directory.GetCurrentDirectory(), "legacy-java", "server508", "data", "npcs", "npclist.cfg");
+        string npcSpawnPath = Path.Combine(Directory.GetCurrentDirectory(), "legacy-java", "server508", "data", "npcs", "npcspawn.cfg");
+
+        foreach (var pair in _npcSpawnLoader.LoadDefinitions(npcListPath))
+            NpcDefinitions[pair.Key] = pair.Value;
+
+        NpcSpawns.AddRange(_npcSpawnLoader.LoadSpawns(npcSpawnPath));
+        foreach (var spawn in NpcSpawns)
+            SpawnNpc(spawn.NpcType, spawn.X, spawn.Y, spawn.Height, spawn.MoveRangeX1, spawn.MoveRangeY1, spawn.MoveRangeX2, spawn.MoveRangeY2, true);
+
+        _worldLoaded = true;
+    }
+
     /// <summary>
     /// Per-player tick — decrements timers, handles stat restore, energy, special, etc.
     /// A simplified translation of Player.process() focused on core state management.
@@ -375,6 +435,8 @@ public class GameEngine : BackgroundService
         // Save timer
         if (p.SaveTimer > 0)
             p.SaveTimer--;
+        if (p.JailTimer > 0)
+            p.JailTimer--;
 
         // Combat delays
         if (p.CombatDelay > 0) p.CombatDelay--;
@@ -460,10 +522,7 @@ public class GameEngine : BackgroundService
             p.SkillLvl[5]--;
             if (p.SkillLvl[5] <= 0)
             {
-                // Reset prayers — will be expanded with prayer service
-                Array.Clear(p.PrayOn);
-                p.DrainRate = 0;
-                p.PrayerIcon = -1;
+                _prayers.Reset(p);
             }
             p.PrayerDrain = 100;
         }
@@ -481,35 +540,7 @@ public class GameEngine : BackgroundService
 
         // Death
         if (p.IsDead)
-        {
-            p.DeathDelay--;
-            if (p.DeathDelay <= 0)
-            {
-                // Death handling — simplified; full logic in Phase 7
-                p.AfterDeathUpdateReq = true;
-            }
-        }
-
-        // After-death restoration
-        if (p.AfterDeathUpdateReq)
-        {
-            for (int i = 0; i < Player.SkillCount; i++)
-                p.SkillLvl[i] = p.GetLevelForXP(i);
-
-            Array.Clear(p.PrayOn);
-            p.DrainRate = 0;
-            p.PrayerIcon = -1;
-            p.FreezeDelay = 0;
-            p.SkulledDelay = 0;
-            p.SpecialAmount = 100;
-            p.RunEnergy = 100;
-            p.DeathDelay = 7;
-            p.SpecialAmountUpdateReq = true;
-            p.RunEnergyUpdateReq = true;
-            p.SkulledUpdateReq = true;
-            p.IsDead = false;
-            p.AfterDeathUpdateReq = false;
-        }
+            _deaths.ProcessPlayerDeath(p);
 
         // Magic cast cooldown reset
         if (p.MagicDelay <= 0 && !p.MagicCanCast)
@@ -598,19 +629,9 @@ public class GameEngine : BackgroundService
     /// </summary>
     private void ProcessNpcDeath(NPC n, int index)
     {
-        if (!n.DeadEmoteDone)
-        {
-            n.RequestAnim(n.DeathEmote, 0);
-            n.DeadEmoteDone = true;
-            n.CombatDelay = 3;
-        }
-        else if (n.DeadEmoteDone && !n.HiddenNPC && n.CombatDelay <= 0)
-        {
-            n.NpcCanLoot = true;
-            // Drop table processing will be handled by ItemDropService (Phase 7+)
-            n.HiddenNPC = true;
-        }
-        else if (n.HiddenNPC && n.RespawnDelay <= 0)
+        _deaths.ProcessNpcDeath(n);
+
+        if (n.HiddenNPC && n.RespawnDelay <= 0)
         {
             if (n.NeedsRespawn)
             {

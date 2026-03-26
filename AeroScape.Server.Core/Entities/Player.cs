@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AeroScape.Server.Core.Skills;
+using AeroScape.Server.Core.Session;
 
 namespace AeroScape.Server.Core.Entities;
 
@@ -12,21 +13,24 @@ namespace AeroScape.Server.Core.Entities;
 public class Player
 {
     // ── Identity / Slot ─────────────────────────────────────────────────────
+    public int PersistentId { get; set; }
     public int PlayerId { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public int Rights { get; set; }
     public bool Online { get; set; }
     public bool[] Disconnected { get; set; } = new bool[2];
+    public PlayerSession? Session { get; set; }
 
     // ── Position & Movement ─────────────────────────────────────────────────
     public int AbsX { get; set; }
     public int AbsY { get; set; }
     public int HeightLevel { get; set; }
-    public int MapRegionX { get; set; }
-    public int MapRegionY { get; set; }
+    public int MapRegionX { get; set; } = -1;
+    public int MapRegionY { get; set; } = -1;
     public int CurrentX { get; set; }
     public int CurrentY { get; set; }
+    public bool UsingHd { get; set; }
 
     public int WalkDir { get; set; } = -1;
     public int RunDir { get; set; } = -1;
@@ -151,6 +155,8 @@ public class Player
     // ── Vengeance state ─────────────────────────────────────────────────
     /// <summary>Whether vengeance is active on this player.</summary>
     public bool VengOn { get; set; }
+    public long LastVengeanceTime { get; set; }
+    public double ArenaSpellPower { get; set; } = 1.0;
 
     // ── Multi-hit tracking (Dragon Claws, etc.) ─────────────────────────
     public int SecondHit { get; set; }
@@ -194,6 +200,10 @@ public class Player
     public int Banned { get; set; }
     public int DoneCode { get; set; }
     public bool Starter { get; set; }
+    public bool Jailed { get; set; }
+    public int JailTimer { get; set; }
+    public bool HouseLocked { get; set; }
+    public int VerificationCode { get; set; }
 
     // ── Kill counts ─────────────────────────────────────────────────────────
     public int ZilyanakillCount { get; set; }
@@ -218,13 +228,21 @@ public class Player
 
     // ── Player / NPC lists for update ───────────────────────────────────────
     public const int MaxPlayers = 2000;
+    public const int MaxNpcs = 50000;
+    public Player?[] PlayerList { get; set; } = new Player?[MaxPlayers];
+    public byte[] PlayersInList { get; set; } = new byte[MaxPlayers];
     public int PlayerListSize { get; set; }
     public bool RebuildNPCList { get; set; }
+    public NPC?[] NpcList { get; set; } = new NPC?[MaxNpcs];
+    public byte[] NpcsInList { get; set; } = new byte[MaxNpcs];
     public int NpcListSize { get; set; }
 
     // ── Interfaces ──────────────────────────────────────────────────────────
     public int InterfaceId { get; set; } = -1;
     public int ChatboxInterfaceId { get; set; } = -1;
+    public int Dialogue { get; set; }
+    public int Choice { get; set; }
+    public int DestroyItemId { get; set; }
 
     // ── Click state ─────────────────────────────────────────────────────────
     public int ClickX { get; set; }
@@ -248,6 +266,7 @@ public class Player
     public int[] TradeItemsN { get; set; } = new int[28];
     public bool[] TradeAccept { get; set; } = new bool[2];
     public int TradePlayer { get; set; }
+    public int TradeStage { get; set; }
 
     // ── Duel ────────────────────────────────────────────────────────────────
     public bool DuelReady { get; set; }
@@ -264,6 +283,7 @@ public class Player
     public bool InHouse { get; set; }
     public bool OwnHouse { get; set; }
     public int PersonHouse { get; set; }
+    public bool BuildingMode { get; set; }
 
     // ── Summoning ───────────────────────────────────────────────────────────
     public int FamiliarType { get; set; }
@@ -285,6 +305,14 @@ public class Player
 
     // ── Bounty Hunter ───────────────────────────────────────────────────────
     public int BountyOpponent { get; set; }
+    public int ZamFL { get; set; }
+    public int SaraFL { get; set; }
+
+    // ── Shops ───────────────────────────────────────────────────────────────
+    public int ShopId { get; set; }
+    public int[] ShopItems { get; set; } = new int[40];
+    public int[] ShopItemsN { get; set; } = new int[40];
+    public bool PartyShop { get; set; }
 
     // ── Skilling timers (Cooking, Fishing, Smithing, etc.) ──────────────────
     public int CookTimer { get; set; } = -1;
@@ -412,6 +440,8 @@ public class Player
         Array.Fill(Items, -1);
         Array.Fill(Equipment, -1);
         Array.Fill(BankItems, -1);
+        Array.Fill(TradeItems, -1);
+        Array.Fill(ShopItems, -1);
     }
 
     /// <summary>

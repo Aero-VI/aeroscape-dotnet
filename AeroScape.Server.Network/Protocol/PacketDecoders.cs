@@ -19,29 +19,51 @@ internal ref struct RsReader
     public sbyte ReadSignedByte() => (sbyte)ReadByte();
     public sbyte ReadSignedByteC() => (sbyte)(-ReadByte());
     public sbyte ReadSignedByteS() => (sbyte)(128 - ReadByte());
+    public sbyte ReadSignedByteA() => (sbyte)(ReadByte() - 128);
 
     public int ReadUnsignedWord()
     {
-        byte hi = ReadByte(), lo = ReadByte();
+        byte hi = ReadByte();
+        byte lo = ReadByte();
         return (hi << 8) | lo;
     }
 
-    public int ReadUnsignedWordBigEndian() => ReadUnsignedWord(); // same in RS terminology: big-endian = MSB first
+    public int ReadUnsignedWordBigEndian()
+    {
+        byte lo = ReadByte();
+        byte hi = ReadByte();
+        return (hi << 8) | lo;
+    }
+
     public int ReadUnsignedWordA()
     {
-        byte hi = ReadByte(), lo = ReadByte();
-        return ((hi << 8) | lo) - 128;
+        byte hi = ReadByte();
+        byte lo = ReadByte();
+        return (hi << 8) | ((lo - 128) & 0xFF);
     }
-    public int ReadUnsignedWordBigEndianA() => ReadUnsignedWordA();
+
+    public int ReadUnsignedWordBigEndianA()
+    {
+        byte lo = ReadByte();
+        byte hi = ReadByte();
+        return (hi << 8) | ((lo - 128) & 0xFF);
+    }
 
     public int ReadSignedWordA()
     {
         int val = ReadUnsignedWordA();
         return val > 32767 ? val - 65536 : val;
     }
+
     public int ReadSignedWordBigEndian()
     {
-        int val = ReadUnsignedWord();
+        int val = ReadUnsignedWordBigEndian();
+        return val > 32767 ? val - 65536 : val;
+    }
+
+    public int ReadSignedWordBigEndianA()
+    {
+        int val = ReadUnsignedWordBigEndianA();
         return val > 32767 ? val - 65536 : val;
     }
 
@@ -62,7 +84,7 @@ internal ref struct RsReader
     {
         var sb = new StringBuilder();
         byte b;
-        while ((b = ReadByte()) != 10 && b != 0)
+        while ((b = ReadByte()) != 0)
             sb.Append((char)b);
         return sb.ToString();
     }
@@ -93,9 +115,15 @@ public sealed class WalkDecoder : IPacketDecoder
         int firstX = r.ReadUnsignedWordBigEndianA();
         int firstY = r.ReadUnsignedWordA();
         bool running = r.ReadSignedByteC() == 1;
+        int[] pathX = new int[numPath];
+        int[] pathY = new int[numPath];
+        for (int i = 0; i < numPath; i++)
+        {
+            pathX[i] = r.ReadSignedByte();
+            pathY[i] = r.ReadSignedByteS();
+        }
 
-        // We just pass the first step; the full path reconstruction will happen in the handler
-        return new WalkMessage(firstX, firstY, running);
+        return new WalkMessage(opcode, firstX, firstY, running, pathX, pathY);
     }
 }
 
@@ -160,7 +188,7 @@ public sealed class ActionButtonsDecoder : IPacketDecoder
             buttonId = packed & 0xFFFF;
         }
 
-        return new ActionButtonsMessage(interfaceId, buttonId, itemId, slotId);
+        return new ActionButtonsMessage(opcode, interfaceId, buttonId, itemId, slotId);
     }
 }
 

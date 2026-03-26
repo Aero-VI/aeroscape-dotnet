@@ -1,3 +1,9 @@
 namespace AeroScape.Server.Core.Messages;
 
-public record WalkMessage(int X, int Y, bool IsRunning);
+public sealed record WalkMessage(
+    int PacketId,
+    int FirstX,
+    int FirstY,
+    bool IsRunning,
+    int[] PathX,
+    int[] PathY);
