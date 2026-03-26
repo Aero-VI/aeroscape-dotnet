@@ -181,10 +181,10 @@ public static class LoginFrames
     private static void WriteMapRegion(FrameWriter w, Player p, MapDataService mapData)
     {
         // Calculate map region from absolute coordinates
-        p.MapRegionX = (p.AbsX >> 3) - 6;
-        p.MapRegionY = (p.AbsY >> 3) - 6;
-        p.CurrentX = p.AbsX - 8 * p.MapRegionX;
-        p.CurrentY = p.AbsY - 8 * p.MapRegionY;
+        p.MapRegionX = (p.AbsX >> 3);
+        p.MapRegionY = (p.AbsY >> 3);
+        p.CurrentX = p.AbsX - 8 * (p.MapRegionX - 6);
+        p.CurrentY = p.AbsY - 8 * (p.MapRegionY - 6);
 
         w.CreateFrameVarSizeWord(142);
         w.WriteWordA(p.MapRegionX);
