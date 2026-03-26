@@ -330,6 +330,9 @@ public class Player
     public SmithingSkill Smithing { get; private set; } = null!;
     public FiremakingSkill Firemaking { get; private set; } = null!;
     public FletchingSkill Fletching { get; private set; } = null!;
+    public CraftingSkill Crafting { get; private set; } = null!;
+    public HerbloreSkill Herblore { get; private set; } = null!;
+    public RunecraftingSkill Runecrafting { get; private set; } = null!;
 
     // ── Fishing state (used by FishingSkill's tick processing) ──────────────
     public bool IsFishing { get; set; }
@@ -383,6 +386,9 @@ public class Player
         Smithing = new SmithingSkill(this);
         Firemaking = new FiremakingSkill(this);
         Fletching = new FletchingSkill(this);
+        Crafting = new CraftingSkill(this);
+        Herblore = new HerbloreSkill(this);
+        Runecrafting = new RunecraftingSkill(this);
 
         // Default look (male)
         Look[0] = 0;  // Hair
