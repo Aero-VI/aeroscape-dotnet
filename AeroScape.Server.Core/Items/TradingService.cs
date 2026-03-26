@@ -194,7 +194,7 @@ public sealed class TradingService(GameEngine engine, PlayerItemsService playerI
                 }
                 break;
             case 336:
-                var amount = packetOpcode switch
+                var offerAmount = packetOpcode switch
                 {
                     233 => 1,
                     21 => 5,
@@ -203,9 +203,9 @@ public sealed class TradingService(GameEngine engine, PlayerItemsService playerI
                     173 => player.BankX,
                     _ => 0
                 };
-                if (amount > 0)
+                if (offerAmount > 0)
                 {
-                    OfferItemBySlot(player, slotId, amount);
+                    OfferItemBySlot(player, slotId, offerAmount);
                 }
                 break;
         }
