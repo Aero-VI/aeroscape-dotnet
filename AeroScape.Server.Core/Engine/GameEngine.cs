@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using AeroScape.Server.Core.Combat;
 using AeroScape.Server.Core.Entities;
 
 namespace AeroScape.Server.Core.Engine;
@@ -58,9 +59,21 @@ public class GameEngine : BackgroundService
 
     private readonly ILogger<GameEngine> _logger;
 
-    public GameEngine(ILogger<GameEngine> logger)
+    // ── Combat services ─────────────────────────────────────────────────────
+    public PlayerVsPlayerCombat PlayerCombat { get; }
+    public PlayerVsNpcCombat PlayerNpcCombat { get; }
+    public NpcVsPlayerCombat NpcPlayerCombat { get; }
+
+    public GameEngine(
+        ILogger<GameEngine> logger,
+        ILogger<PlayerVsPlayerCombat> pvpLogger,
+        ILogger<PlayerVsNpcCombat> pveLogger,
+        ILogger<NpcVsPlayerCombat> npcLogger)
     {
         _logger = logger;
+        PlayerCombat = new PlayerVsPlayerCombat(this, pvpLogger);
+        PlayerNpcCombat = new PlayerVsNpcCombat(this, pveLogger);
+        NpcPlayerCombat = new NpcVsPlayerCombat(this, npcLogger);
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -314,6 +327,10 @@ public class GameEngine : BackgroundService
 
             if (!n.IsDead)
             {
+                // NPC-vs-Player combat (mirrors Java: NPC.process() → Engine.npcPlayerCombat.attackPlayer)
+                if (n.AttackingPlayer)
+                    NpcPlayerCombat.ProcessAttack(n);
+
                 // Random walk handled by NpcMovement service (Phase 6+)
             }
             else
@@ -494,16 +511,38 @@ public class GameEngine : BackgroundService
             p.AfterDeathUpdateReq = false;
         }
 
+        // Magic cast cooldown reset
+        if (p.MagicDelay <= 0 && !p.MagicCanCast)
+            p.MagicCanCast = true;
+
+        // Dragon claws multi-hit timer
+        if (p.ClawTimer > 0)
+        {
+            p.ClawTimer--;
+            if (p.ClawTimer <= 0 && p.UseClaws)
+            {
+                // Apply 3rd and 4th claw hits to target
+                // (target reference would need to be resolved from AttackPlayer/AttackNPC)
+                p.UseClaws = false;
+            }
+        }
+
         // Home teleport sequence
         if (p.HomeTeleDelay > 0) p.HomeTeleDelay--;
         if (p.YellTimer > 0) p.YellTimer--;
         if (p.SuggestionTimer > 0) p.SuggestionTimer--;
 
-        // Skilling timers
-        if (p.CookTimer > 0) p.CookTimer--;
-        if (p.FishTimer > 0) p.FishTimer--;
-        if (p.FletchTimer > 0) p.FletchTimer--;
-        if (p.SmithingTimer > 0) p.SmithingTimer--;
+        // ── Gathering skill processing ─────────────────────────────────────
+        // These tick-driven skills were processed in Player.process() in the Java code.
+        // Woodcutting and Mining use their own internal timers via GatheringSkillBase.
+        // Fishing, Cooking, and Fletching use the player's timer fields.
+        p.Woodcutting?.Process();
+        p.Mining?.Process();
+        p.Fishing?.Process();
+        p.Cooking?.Process();
+        p.Fletching?.Process();
+
+        // Skilling timers (legacy fields still decremented for compatibility)
         if (p.HerbloreTimer > 0) p.HerbloreTimer--;
         if (p.AgilityTimer > 0) p.AgilityTimer--;
         if (p.ActionTimer > 0) p.ActionTimer--;
@@ -515,6 +554,13 @@ public class GameEngine : BackgroundService
         // Disconnection forwarding
         if (p.Disconnected[0])
             p.Disconnected[1] = true;
+
+        // ── Combat dispatch (mirrors Java Player.process() → Engine.playerCombat / playerNPCCombat) ──
+        if (p.AttackingPlayer)
+            PlayerCombat.ProcessAttack(p);
+
+        if (p.AttackingNPC)
+            PlayerNpcCombat.ProcessAttack(p);
 
         // Level-up detection
         for (int i = 0; i < Player.SkillCount; i++)

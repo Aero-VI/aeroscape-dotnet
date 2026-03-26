@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AeroScape.Server.Core.Skills;
 
 namespace AeroScape.Server.Core.Entities;
 
@@ -138,6 +139,28 @@ public class Player
     public bool AttackingPlayer { get; set; }
     public int AttackNPC { get; set; }
     public bool AttackingNPC { get; set; }
+
+    // ── Magic autocasting state ─────────────────────────────────────────
+    /// <summary>Whether the player is autocasting spells.</summary>
+    public bool AutoCasting { get; set; }
+    /// <summary>Internal spell ID (1-16) for the spell being autocast.</summary>
+    public int AutoCastSpellId { get; set; } = -1;
+    /// <summary>Whether the magic system is ready to cast (resets after each cast).</summary>
+    public bool MagicCanCast { get; set; } = true;
+
+    // ── Vengeance state ─────────────────────────────────────────────────
+    /// <summary>Whether vengeance is active on this player.</summary>
+    public bool VengOn { get; set; }
+
+    // ── Multi-hit tracking (Dragon Claws, etc.) ─────────────────────────
+    public int SecondHit { get; set; }
+    public int ThirdHit { get; set; }
+    public int FourthHit { get; set; }
+    public int ClawTimer { get; set; }
+    public bool UseClaws { get; set; }
+
+    // ── Prayer Hitter counter (for protection prayer bypass) ────────────
+    public int Hitter { get; set; }
     public int ClickDelay { get; set; } = -1;
     public int NpcDelay { get; set; }
     public int DeathDelay { get; set; } = 7;
@@ -296,6 +319,24 @@ public class Player
     public int AgilityXP { get; set; }
     public int AgilityTimer { get; set; } = -1;
 
+    // ── Gathering skill instances ───────────────────────────────────────────
+    // These are created lazily / during init. Each skill encapsulates its own
+    // state and tick processing, mirroring the Java pattern where Player had
+    // `public Woodcutting wc;` and `public Mining mi;` fields.
+    public WoodcuttingSkill Woodcutting { get; private set; } = null!;
+    public MiningSkill Mining { get; private set; } = null!;
+    public FishingSkill Fishing { get; private set; } = null!;
+    public CookingSkill Cooking { get; private set; } = null!;
+    public SmithingSkill Smithing { get; private set; } = null!;
+    public FiremakingSkill Firemaking { get; private set; } = null!;
+    public FletchingSkill Fletching { get; private set; } = null!;
+
+    // ── Fishing state (used by FishingSkill's tick processing) ──────────────
+    public bool IsFishing { get; set; }
+    public int NetType { get; set; }
+    public bool Bait { get; set; }
+    public int FishMan { get; set; }
+
     // ── Action / idle ───────────────────────────────────────────────────────
     public int ActionTimer { get; set; }
     public int Idle { get; set; }
@@ -333,6 +374,15 @@ public class Player
         WalkingQueueX = new int[WalkingQueueSize];
         WalkingQueueY = new int[WalkingQueueSize];
         WalkingQueue = new int[WalkingQueueSize];
+
+        // Initialise gathering skill instances (mirrors Java: wc = new Woodcutting(this))
+        Woodcutting = new WoodcuttingSkill(this);
+        Mining = new MiningSkill(this);
+        Fishing = new FishingSkill(this);
+        Cooking = new CookingSkill(this);
+        Smithing = new SmithingSkill(this);
+        Firemaking = new FiremakingSkill(this);
+        Fletching = new FletchingSkill(this);
 
         // Default look (male)
         Look[0] = 0;  // Hair
