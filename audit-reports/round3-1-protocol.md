@@ -1,0 +1,11 @@
+## Bugs
+
+`AeroScape.Server.Network/Protocol/PacketRouter.cs:140` — Incoming opcodes are still ISAAC-decoded after login (`rawOpcode - session.InCipher.NextInt()`), but the Java 508 server reads raw packet ids and never applies an ISAAC opcode cipher in its packet loop. This leaves the C# server out of sync with the legacy protocol and misroutes post-login packets. — Java ref: `legacy-java/server508/src/main/java/DavidScape/io/Packets.java:47-56`
+
+`AeroScape.Server.Network/Protocol/PacketRouter.cs:91` — Opcodes `117`, `247`, and `248` are still routed to `ItemOption2Decoder`, `BountyHunterDecoder`, and `PrayerDecoder`, but the Java server handles all three in the shared skillcape-trim/no-op branch instead of decoding gameplay messages from them. The current C# routing is therefore protocol-incompatible with the legacy server. — Java ref: `legacy-java/server508/src/main/java/DavidScape/io/PacketManager.java:311-313`
+
+`AeroScape.Server.Network/Protocol/PacketDecoders.cs:458` — `ObjectOption2Decoder` still consumes only two words and hardcodes `ObjectY = 0`, even though opcode `228` is a 6-byte packet in the Java protocol. The resulting `ObjectOption2Message` feeds invalid object coordinates into the handler. — Java ref: `legacy-java/server508/src/main/java/DavidScape/io/Packets.java:339`, `legacy-java/server508/src/main/java/DavidScape/io/packets/ObjectOption2.java:29-39`
+
+`AeroScape.Server.Network/Frames/LoginFrames.cs:325` — Missing map-region XTEA keys still fall back to four zero dwords during the login region rebuild. The Java server does not do that here: it teleports the player to Varrock and aborts the region frame when any region keyset is missing. Sending a bad region build during login is a plausible cause of the client crash. — Java ref: `legacy-java/server508/src/main/java/DavidScape/io/Frames.java:1127-1131`
+
+`AeroScape.Server.Network/Update/PlayerUpdateWriter.cs:290` — Runtime map-region rebuilds use the same zero-XTEA fallback instead of the Java server’s teleport-and-abort behavior, so the same invalid-region bug remains present after login on teleports/region changes. — Java ref: `legacy-java/server508/src/main/java/DavidScape/io/Frames.java:1127-1131`
