@@ -33,6 +33,11 @@ public class NPCOption1MessageHandler : IMessageHandler<NPCOption1Message>
 
         switch (npc.NpcType)
         {
+            case 312:
+            case 313:
+            case 316:
+                player.Fishing.StartFishing(npc.NpcType, 1);
+                break;
             case 494:
             case 495:
             case 2619:

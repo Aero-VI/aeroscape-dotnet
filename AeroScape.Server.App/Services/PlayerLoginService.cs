@@ -93,6 +93,7 @@ public sealed class PlayerLoginService : IPlayerLoginService
     {
         var p = new Player
         {
+            PersistentId = db.Id,
             Username = db.Username,
             Password = db.PasswordHash,
             Rights = db.Rights,
@@ -123,6 +124,8 @@ public sealed class PlayerLoginService : IPlayerLoginService
             FamiliarType = db.FamiliarType,
             ClanName = db.ClanName,
         };
+
+        p.InitDefaults();
 
         // Parse look/colour data
         if (!string.IsNullOrEmpty(db.LookData))

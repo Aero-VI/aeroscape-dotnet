@@ -60,6 +60,11 @@ builder.Services.AddSingleton<WalkQueue>();
 builder.Services.AddSingleton<ShopService>();
 builder.Services.AddSingleton<PrayerService>();
 builder.Services.AddSingleton<DeathService>();
+builder.Services.AddSingleton<MagicService>();
+builder.Services.AddSingleton<ClanChatService>();
+builder.Services.AddSingleton<BountyHunterService>();
+builder.Services.AddSingleton<ConstructionService>();
+builder.Services.AddSingleton<CastleWarsService>();
 builder.Services.AddSingleton<DialogueService>();
 builder.Services.AddSingleton<ObjectInteractionService>();
 builder.Services.AddSingleton<CommandService>();
@@ -76,6 +81,8 @@ builder.Services.AddSingleton<IGameUpdateService, GameUpdateService>();
 
 // ── Login service ────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IPlayerLoginService, PlayerLoginService>();
+builder.Services.AddSingleton<IPlayerPersistenceService, PlayerPersistenceService>();
+builder.Services.AddHostedService(sp => (PlayerPersistenceService)sp.GetRequiredService<IPlayerPersistenceService>());
 
 // ── Network / protocol ──────────────────────────────────────────────────────
 builder.Services.AddSingleton<PacketRouter>();

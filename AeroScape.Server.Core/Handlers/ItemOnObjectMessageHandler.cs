@@ -16,8 +16,14 @@ public class ItemOnObjectMessageHandler : IMessageHandler<ItemOnObjectMessage>
     }
     public Task HandleAsync(PlayerSession session, ItemOnObjectMessage message, CancellationToken cancellationToken)
     {
-        // TODO: Implement item-on-object logic (smelting, smithing, cooking, farming, cannon placement, etc.)
-        // Legacy handled furnace (56332), anvil (54540), range (58124/28173), farming patch (34573), and more.
+        if (session.Entity is { } player)
+        {
+            if (AeroScape.Server.Core.Skills.SmithingSkill.IsFurnaceObject(message.ObjectId))
+                player.Smithing.SmeltOre(message.ItemId);
+            else if (AeroScape.Server.Core.Skills.SmithingSkill.IsAnvilObject(message.ObjectId))
+                player.Smithing.OpenSmithingInterface(message.ItemId);
+        }
+
         _logger.LogInformation("[ItemOnObject] Player {SessionId} used item {ItemId} on object {ObjectId}", session.SessionId, message.ItemId, message.ObjectId);
         return Task.CompletedTask;
     }

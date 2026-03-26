@@ -105,14 +105,23 @@ public class FishingSkill
         }
 
         // Set up the fishing state on the player (matches Java pattern)
+        _player.IsFishing = true;
+        _player.NetType = optionNumber switch
+        {
+            1 when spot.Animation == 620 => 1,
+            2 when spot.BaitItemId != 0 => 2,
+            1 when spot.Animation == 619 => 3,
+            2 when spot.Animation == 618 => 4,
+            _ => 0,
+        };
+        _player.Bait = spot.BaitItemId != 0;
+        _player.FishMan = spot.FishItemId;
         _player.FishXP = spot.BaseXp;
         _player.FishGet = spot.FishItemId;
         _player.FishEmote = spot.Animation;
         _player.FishTimer = 4 + Random.Shared.Next(7); // 4-10 ticks
         _player.ActionTimer = 3;
-
-        // Do the first catch immediately (matches Java FishThat call)
-        CatchFish(spot);
+        _player.RequestAnim(spot.Animation, 0);
     }
 
     /// <summary>
@@ -124,7 +133,7 @@ public class FishingSkill
         if (_player.FishTimer > 0)
             _player.FishTimer--;
 
-        if (_player.FishTimer == 0 && _player.FishGet > 0)
+        if (_player.FishTimer == 0 && _player.IsFishing && _player.FishGet > 0)
         {
             // Find the matching spot to get bait info
             var spot = FindSpotByFish(_player.FishGet);
@@ -139,6 +148,10 @@ public class FishingSkill
     public void StopFishing()
     {
         _player.FishTimer = -1;
+        _player.IsFishing = false;
+        _player.NetType = 0;
+        _player.Bait = false;
+        _player.FishMan = 0;
         _player.FishGet = 0;
         _player.FishXP = 0;
         _player.FishEmote = 0;

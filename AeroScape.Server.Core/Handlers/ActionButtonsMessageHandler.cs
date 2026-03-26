@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using AeroScape.Server.Core.Items;
 using AeroScape.Server.Core.Messages;
+using AeroScape.Server.Core.Services;
 using AeroScape.Server.Core.Session;
 
 namespace AeroScape.Server.Core.Handlers;
@@ -13,13 +14,15 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
     private readonly PlayerBankService _bank;
     private readonly TradingService _trading;
     private readonly PlayerItemsService _items;
+    private readonly MagicService _magic;
 
-    public ActionButtonsMessageHandler(ILogger<ActionButtonsMessageHandler> logger, PlayerBankService bank, TradingService trading, PlayerItemsService items)
+    public ActionButtonsMessageHandler(ILogger<ActionButtonsMessageHandler> logger, PlayerBankService bank, TradingService trading, PlayerItemsService items, MagicService magic)
     {
         _logger = logger;
         _bank = bank;
         _trading = trading;
         _items = items;
+        _magic = magic;
     }
     public Task HandleAsync(PlayerSession session, ActionButtonsMessage message, CancellationToken cancellationToken)
     {
@@ -31,6 +34,17 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
 
         switch (message.InterfaceId)
         {
+            case 192:
+            case 193:
+            case 430:
+                _magic.TryCastModernAction(player, message.ButtonId);
+                break;
+            case 187:
+                _magic.TryCastLunarAction(player, message.ButtonId);
+                break;
+            case 300:
+                player.Smithing.SmithItem(message.ButtonId);
+                break;
             case 763:
                 if (message.ButtonId == 0)
                 {

@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using AeroScape.Server.Core.Engine;
+using AeroScape.Server.Core.Services;
 using AeroScape.Server.Core.Session;
 using AeroScape.Server.Core.World;
 using AeroScape.Server.Network.Frames;
@@ -24,6 +25,7 @@ public sealed class TcpBackgroundService : BackgroundService
     private readonly PacketRouter _router;
     private readonly GameEngine _engine;
     private readonly IPlayerLoginService _loginService;
+    private readonly IPlayerPersistenceService _playerPersistence;
     private readonly MapDataService _mapData;
 
     /// <summary>Game port — classic RS 508 default.</summary>
@@ -35,6 +37,7 @@ public sealed class TcpBackgroundService : BackgroundService
         PacketRouter router,
         GameEngine engine,
         IPlayerLoginService loginService,
+        IPlayerPersistenceService playerPersistence,
         MapDataService mapData)
     {
         _logger       = logger;
@@ -42,6 +45,7 @@ public sealed class TcpBackgroundService : BackgroundService
         _router       = router;
         _engine       = engine;
         _loginService = loginService;
+        _playerPersistence = playerPersistence;
         _mapData      = mapData;
     }
 
@@ -153,6 +157,7 @@ public sealed class TcpBackgroundService : BackgroundService
             if (session.Entity is { } p && p.PlayerId > 0)
             {
                 p.Session = null;
+                await _playerPersistence.SavePlayerAsync(p, stoppingToken);
                 _engine.RemovePlayer(p.PlayerId);
                 _logger.LogInformation("Player '{User}' removed from world", p.Username);
             }

@@ -6,11 +6,13 @@ public sealed class ObjectInteractionService
 {
     private readonly ShopService _shops;
     private readonly PrayerService _prayer;
+    private readonly BountyHunterService _bountyHunter;
 
-    public ObjectInteractionService(ShopService shops, PrayerService prayer)
+    public ObjectInteractionService(ShopService shops, PrayerService prayer, BountyHunterService bountyHunter)
     {
         _shops = shops;
         _prayer = prayer;
+        _bountyHunter = bountyHunter;
     }
 
     public bool HandleOption1(Player player, int objectId, int x, int y)
@@ -18,6 +20,18 @@ public sealed class ObjectInteractionService
         player.ClickId = objectId;
         player.ClickX = x;
         player.ClickY = y;
+
+        if (AeroScape.Server.Core.Skills.WoodcuttingSkill.FindTree(objectId) is not null)
+        {
+            player.Woodcutting.StartCutting(objectId);
+            return true;
+        }
+
+        if (AeroScape.Server.Core.Skills.MiningSkill.FindRock(objectId) is not null)
+        {
+            player.Mining.StartMining(objectId);
+            return true;
+        }
 
         switch (objectId)
         {
@@ -52,6 +66,10 @@ public sealed class ObjectInteractionService
                 return true;
             case 15482:
                 player.InterfaceId = 399;
+                return true;
+            case 28120:
+            case 28121:
+                _bountyHunter.EnterBounty(player);
                 return true;
             case 23271:
                 player.JumpDelay = 3;

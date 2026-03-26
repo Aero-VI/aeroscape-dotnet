@@ -58,15 +58,14 @@ public class MagicOnNPCMessageHandler : IMessageHandler<MagicOnNPCMessage>
             return Task.CompletedTask;
         }
 
-        // Check cooldown
         if (!player.MagicCanCast)
             return Task.CompletedTask;
 
-        // Set up combat target with magic
+        var hasAutocastStaff = MagicNpcService.HasAutocastStaff(player);
         player.AttackNPC = npcIndex;
         player.AttackingNPC = true;
         player.AutoCastSpellId = spellId;
-        player.AutoCasting = true;
+        player.AutoCasting = hasAutocastStaff;
         player.MagicCanCast = true;
 
         // Reset PvP

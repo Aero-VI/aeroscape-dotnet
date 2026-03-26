@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AeroScape.Server.Core.Entities;
 
 namespace AeroScape.Server.Core.Skills;
@@ -16,6 +17,34 @@ namespace AeroScape.Server.Core.Skills;
 public class SmithingSkill
 {
     private readonly Player _player;
+    private static readonly Dictionary<int, int> ButtonToProductIndex = new()
+    {
+        [19] = 0,
+        [27] = 1,
+        [35] = 2,
+        [43] = 3,
+        [51] = 4,
+        [59] = 5,
+        [67] = 6,
+        [75] = 7,
+        [107] = 8,
+        [115] = 9,
+        [123] = 10,
+        [131] = 11,
+        [139] = 12,
+        [147] = 13,
+        [155] = 14,
+        [179] = 15,
+        [187] = 16,
+        [195] = 17,
+        [203] = 18,
+        [211] = 19,
+        [219] = 20,
+        [227] = 21,
+        [235] = 22,
+        [243] = 23,
+        [268] = 24,
+    };
 
     /// <summary>The current metal type being smithed (1-6). -1 = none.</summary>
     public int CurrentMetalType { get; set; } = -1;
@@ -150,6 +179,9 @@ public class SmithingSkill
     /// <param name="amount">How many to smith.</param>
     public void SmithItem(int productIndex, int amount = 1)
     {
+        if (ButtonToProductIndex.TryGetValue(productIndex, out var mappedProductIndex))
+            productIndex = mappedProductIndex;
+
         if (CurrentMetalType < 1 || CurrentMetalType > 6)
             return;
 

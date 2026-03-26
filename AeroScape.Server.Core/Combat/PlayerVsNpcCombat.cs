@@ -62,7 +62,7 @@ public class PlayerVsNpcCombat
         int distance = CombatFormulas.GetDistance(npc.AbsX, npc.AbsY, attacker.AbsX, attacker.AbsY);
 
         // Autocast magic takes priority
-        if (attacker.AutoCastSpellId > 0 && attacker.AutoCasting)
+        if (attacker.AutoCastSpellId > 0)
         {
             ProcessMagicAttack(attacker, npc, attacker.AutoCastSpellId);
         }
@@ -240,8 +240,12 @@ public class PlayerVsNpcCombat
             return;
         }
 
-        // Rune check (simplified — full rune checking needs item system)
-        // TODO: Check and consume runes when item management is implemented.
+        if (!MagicNpcService.TryConsumeRunes(attacker, spell))
+        {
+            attacker.AutoCasting = false;
+            attacker.AutoCastSpellId = -1;
+            return;
+        }
 
         // Apply damage
         int damage = CombatFormulas.MagicDamage(spellId,
@@ -257,11 +261,15 @@ public class PlayerVsNpcCombat
         attacker.AttackNPC = npc.NpcId;
         attacker.CombatDelay = CombatConstants.MagicCastDelay;
         attacker.MagicDelay = CombatConstants.MagicCastDelay;
+        attacker.MagicCanCast = false;
         attacker.RequestFaceTo(npc.NpcId);
 
         // Award magic XP
         double xp = spell.GetXpForHit(damage);
         attacker.AddSkillXP(xp, CombatConstants.SkillMagic);
+
+        if (!attacker.AutoCasting)
+            attacker.AutoCastSpellId = -1;
 
         RetaliateNpc(npc, attacker);
     }
