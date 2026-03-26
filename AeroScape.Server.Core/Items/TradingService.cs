@@ -1,0 +1,321 @@
+using AeroScape.Server.Core.Engine;
+using AeroScape.Server.Core.Entities;
+
+namespace AeroScape.Server.Core.Items;
+
+public sealed class TradingService(GameEngine engine, PlayerItemsService playerItems, ItemDefinitionLoader itemDefinitions)
+{
+    public void RequestTrade(Player player, int targetIndex)
+    {
+        if (targetIndex <= 0 || targetIndex >= engine.Players.Length)
+        {
+            return;
+        }
+
+        var target = engine.Players[targetIndex];
+        if (target is null || !target.Online || target.PlayerId == player.PlayerId)
+        {
+            return;
+        }
+
+        player.TradePlayer = target.PlayerId;
+        if (target.TradePlayer == player.PlayerId)
+        {
+            OpenFirstScreen(player, target);
+        }
+    }
+
+    public void ConfirmTrade(Player player)
+    {
+        var partner = GetPartner(player);
+        if (partner is null)
+        {
+            return;
+        }
+
+        switch (player.TradeStage)
+        {
+            case 1:
+                player.TradeAccept[0] = true;
+                if (partner.TradeAccept[0])
+                {
+                    player.TradeStage = 2;
+                    partner.TradeStage = 2;
+                    player.TradeAccept[0] = false;
+                    partner.TradeAccept[0] = false;
+                }
+                break;
+            case 2:
+                player.TradeAccept[1] = true;
+                if (partner.TradeAccept[1])
+                {
+                    CompleteTrade(player, partner);
+                }
+                break;
+        }
+    }
+
+    public void DeclineTrade(Player player)
+    {
+        var partner = GetPartner(player);
+        ReturnItems(player);
+        ResetTrade(player);
+        if (partner is not null)
+        {
+            ReturnItems(partner);
+            ResetTrade(partner);
+        }
+    }
+
+    public void OfferItemBySlot(Player player, int itemSlot, int amount)
+    {
+        var partner = GetPartner(player);
+        if (partner is null || player.TradeStage != 1 || itemSlot < 0 || itemSlot >= player.Items.Length)
+        {
+            return;
+        }
+
+        var itemId = player.Items[itemSlot];
+        if (itemId < 0)
+        {
+            return;
+        }
+
+        if (!playerItems.HaveItem(player, itemId, amount))
+        {
+            amount = itemDefinitions.IsStackable(itemId) ? player.ItemsN[itemSlot] : playerItems.InvItemCount(player, itemId);
+        }
+
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        OfferItem(player, itemId, amount);
+        player.TradeAccept[0] = false;
+        partner.TradeAccept[0] = false;
+    }
+
+    public void RemoveItemByTradeSlot(Player player, int tradeSlot, int amount)
+    {
+        var partner = GetPartner(player);
+        if (partner is null || tradeSlot < 0 || tradeSlot >= player.TradeItems.Length || player.TradeItems[tradeSlot] < 0)
+        {
+            return;
+        }
+
+        var itemId = player.TradeItems[tradeSlot];
+        if (itemDefinitions.IsStackable(itemId))
+        {
+            var toRemove = Math.Min(amount, player.TradeItemsN[tradeSlot]);
+            if (toRemove <= 0 || !playerItems.AddItem(player, itemId, toRemove))
+            {
+                return;
+            }
+
+            player.TradeItemsN[tradeSlot] -= toRemove;
+            if (player.TradeItemsN[tradeSlot] <= 0)
+            {
+                player.TradeItems[tradeSlot] = -1;
+                player.TradeItemsN[tradeSlot] = 0;
+            }
+        }
+        else
+        {
+            var removed = 0;
+            while (removed < amount)
+            {
+                var slot = GetTradeItemSlot(player, itemId);
+                if (slot < 0 || !playerItems.AddItem(player, itemId, 1))
+                {
+                    break;
+                }
+
+                player.TradeItems[slot] = -1;
+                player.TradeItemsN[slot] = 0;
+                removed++;
+            }
+        }
+
+        player.TradeAccept[0] = false;
+        partner.TradeAccept[0] = false;
+    }
+
+    public void HandleActionButton(Player player, int interfaceId, int packetOpcode, int buttonId, int slotId)
+    {
+        switch (interfaceId)
+        {
+            case 334:
+                if (buttonId == 20)
+                {
+                    ConfirmTrade(player);
+                }
+                else if (buttonId is 8 or 21)
+                {
+                    DeclineTrade(player);
+                }
+                break;
+            case 335:
+                if (buttonId == 16)
+                {
+                    ConfirmTrade(player);
+                }
+                else if (buttonId is 12 or 18)
+                {
+                    DeclineTrade(player);
+                }
+                else if (buttonId == 30 && packetOpcode == 233)
+                {
+                    RemoveItemByTradeSlot(player, slotId, 1);
+                }
+                break;
+            case 336:
+                var amount = packetOpcode switch
+                {
+                    233 => 1,
+                    21 => 5,
+                    169 => 10,
+                    214 => slotId >= 0 && slotId < player.Items.Length ? playerItems.InvItemCount(player, player.Items[slotId]) : 0,
+                    _ => 0
+                };
+                if (amount > 0)
+                {
+                    OfferItemBySlot(player, slotId, amount);
+                }
+                break;
+        }
+    }
+
+    private void OpenFirstScreen(Player player, Player partner)
+    {
+        player.TradePlayer = partner.PlayerId;
+        partner.TradePlayer = player.PlayerId;
+        player.TradeStage = 1;
+        partner.TradeStage = 1;
+        player.TradeAccept[0] = false;
+        player.TradeAccept[1] = false;
+        partner.TradeAccept[0] = false;
+        partner.TradeAccept[1] = false;
+        player.InterfaceId = 335;
+        partner.InterfaceId = 335;
+    }
+
+    private void CompleteTrade(Player player, Player partner)
+    {
+        var playerItemsSnapshot = SnapshotTradeItems(player);
+        var partnerItemsSnapshot = SnapshotTradeItems(partner);
+
+        foreach (var (itemId, amount) in partnerItemsSnapshot)
+        {
+            playerItems.AddItem(player, itemId, amount);
+        }
+
+        foreach (var (itemId, amount) in playerItemsSnapshot)
+        {
+            playerItems.AddItem(partner, itemId, amount);
+        }
+
+        ResetTrade(player);
+        ResetTrade(partner);
+    }
+
+    private void OfferItem(Player player, int itemId, int amount)
+    {
+        if (itemDefinitions.IsStackable(itemId))
+        {
+            var slot = GetTradeItemSlot(player, itemId);
+            if (slot < 0)
+            {
+                slot = GetFreeTradeSlot(player);
+                if (slot < 0)
+                {
+                    return;
+                }
+
+                player.TradeItems[slot] = itemId;
+            }
+
+            if (!playerItems.DeleteItem(player, itemId, amount))
+            {
+                return;
+            }
+
+            player.TradeItemsN[slot] += amount;
+            return;
+        }
+
+        for (var i = 0; i < amount; i++)
+        {
+            var slot = GetFreeTradeSlot(player);
+            if (slot < 0 || !playerItems.DeleteItem(player, itemId, 1))
+            {
+                return;
+            }
+
+            player.TradeItems[slot] = itemId;
+            player.TradeItemsN[slot] = 1;
+        }
+    }
+
+    private void ReturnItems(Player player)
+    {
+        foreach (var (itemId, amount) in SnapshotTradeItems(player))
+        {
+            playerItems.AddItem(player, itemId, amount);
+        }
+    }
+
+    private List<(int ItemId, int Amount)> SnapshotTradeItems(Player player)
+    {
+        var items = new List<(int ItemId, int Amount)>();
+        for (var i = 0; i < player.TradeItems.Length; i++)
+        {
+            if (player.TradeItems[i] >= 0 && player.TradeItemsN[i] > 0)
+            {
+                items.Add((player.TradeItems[i], player.TradeItemsN[i]));
+            }
+        }
+
+        return items;
+    }
+
+    private void ResetTrade(Player player)
+    {
+        Array.Fill(player.TradeItems, -1);
+        Array.Fill(player.TradeItemsN, 0);
+        player.TradeAccept[0] = false;
+        player.TradeAccept[1] = false;
+        player.TradePlayer = 0;
+        player.TradeStage = 0;
+        player.InterfaceId = -1;
+    }
+
+    private Player? GetPartner(Player player) =>
+        player.TradePlayer > 0 && player.TradePlayer < engine.Players.Length ? engine.Players[player.TradePlayer] : null;
+
+    private int GetTradeItemSlot(Player player, int itemId)
+    {
+        for (var i = 0; i < player.TradeItems.Length; i++)
+        {
+            if (player.TradeItems[i] == itemId)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private int GetFreeTradeSlot(Player player)
+    {
+        for (var i = 0; i < player.TradeItems.Length; i++)
+        {
+            if (player.TradeItems[i] == -1)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+}

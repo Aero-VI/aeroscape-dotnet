@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Messages;
 using AeroScape.Server.Core.Session;
 using Microsoft.Extensions.Logging;
@@ -93,7 +94,7 @@ public class PublicChatMessageHandler : IMessageHandler<PublicChatMessage>
         return text;
     }
 
-    private void HandleClanChat(PlayerSession session, Entities.Player player, string message)
+    private void HandleClanChat(PlayerSession session, Player player, string message)
     {
         // TODO: Dispatch to clan chat system
         // ClanMain.ClanMessage(player, message);
