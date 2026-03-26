@@ -8,7 +8,7 @@ public interface IPlayerSessionManager
 {
     void AddSession(PlayerSession session);
     void RemoveSession(Guid sessionId);
-    PlayerSession GetSession(Guid sessionId);
+    PlayerSession? GetSession(Guid sessionId);
     IEnumerable<PlayerSession> GetAllSessions();
 }
 
@@ -26,7 +26,7 @@ public class PlayerSessionManager : IPlayerSessionManager
         _sessions.TryRemove(sessionId, out _);
     }
 
-    public PlayerSession GetSession(Guid sessionId)
+    public PlayerSession? GetSession(Guid sessionId)
     {
         _sessions.TryGetValue(sessionId, out var session);
         return session;

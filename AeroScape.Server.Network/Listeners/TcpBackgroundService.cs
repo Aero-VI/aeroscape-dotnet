@@ -3,21 +3,26 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Session;
+using AeroScape.Server.Network.Frames;
+using AeroScape.Server.Network.Login;
 using AeroScape.Server.Network.Protocol;
 
 namespace AeroScape.Server.Network.Listeners;
 
 /// <summary>
 /// Long-running hosted service that listens for incoming TCP connections on the
-/// game port (default 43594) and spawns a read loop per client using
-/// <see cref="System.IO.Pipelines"/>.
+/// game port (default 43594), performs the RS 508 login handshake, then spawns
+/// a pipe-based read loop for game packets.
 /// </summary>
 public sealed class TcpBackgroundService : BackgroundService
 {
     private readonly ILogger<TcpBackgroundService> _logger;
     private readonly IPlayerSessionManager _sessions;
     private readonly PacketRouter _router;
+    private readonly GameEngine _engine;
+    private readonly IPlayerLoginService _loginService;
 
     /// <summary>Game port — classic RS 508 default.</summary>
     private const int DefaultPort = 43594;
@@ -25,11 +30,15 @@ public sealed class TcpBackgroundService : BackgroundService
     public TcpBackgroundService(
         ILogger<TcpBackgroundService> logger,
         IPlayerSessionManager sessions,
-        PacketRouter router)
+        PacketRouter router,
+        GameEngine engine,
+        IPlayerLoginService loginService)
     {
-        _logger   = logger;
-        _sessions = sessions;
-        _router   = router;
+        _logger       = logger;
+        _sessions     = sessions;
+        _router       = router;
+        _engine       = engine;
+        _loginService = loginService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -63,8 +72,69 @@ public sealed class TcpBackgroundService : BackgroundService
 
         try
         {
-            var stream = tcp.GetStream();
-            var fillTask  = FillPipeAsync(stream, pipe.Writer, session.CancellationToken, stoppingToken);
+            // ═══════════════════════════════════════════════════════════════
+            // Phase 1: Login handshake (directly on NetworkStream, no pipe)
+            // ═══════════════════════════════════════════════════════════════
+            var loginHandler = new LoginHandler(_logger);
+            var loginResult = await loginHandler.HandleLoginAsync(session, stoppingToken);
+
+            if (loginResult is null)
+            {
+                _logger.LogInformation("Session {Id}: login handshake failed, disconnecting", session.SessionId);
+                return;
+            }
+
+            // Load or create the player in the database
+            var (player, returnCode) = await _loginService.LoadOrCreatePlayerAsync(
+                loginResult.Username, loginResult.Password);
+
+            // Find a world slot for the player
+            int slot = _engine.FindFreePlayerSlot();
+            if (slot == -1)
+            {
+                returnCode = 7; // Server full
+            }
+
+            // Send login response
+            await loginHandler.SendLoginResponseAsync(
+                session, returnCode, player.Rights, slot > 0 ? slot : 1, stoppingToken);
+
+            if (returnCode != 2)
+            {
+                _logger.LogInformation("Session {Id}: login rejected (code {Code}) for '{User}'",
+                    session.SessionId, returnCode, loginResult.Username);
+                return;
+            }
+
+            // Initialise ISAAC ciphers
+            session.InitIsaac(loginResult.IsaacSeed);
+
+            // Register player in the game engine
+            player.InitDefaults();
+            // Restore position (defaults from DB or spawn point)
+            if (player.AbsX == 0 && player.AbsY == 0)
+            {
+                player.AbsX = 3222;
+                player.AbsY = 3219;
+            }
+            player.Online = true;
+            _engine.AddPlayer(player, slot);
+            session.Entity = player;
+
+            _logger.LogInformation("Session {Id}: '{User}' logged in (slot {Slot})",
+                session.SessionId, loginResult.Username, slot);
+
+            // ═══════════════════════════════════════════════════════════════
+            // Phase 2: Send post-login initialization frames
+            // ═══════════════════════════════════════════════════════════════
+            var netStream = session.GetStream();
+            await LoginFrames.SendLoginSequenceAsync(
+                netStream, player, loginResult.UsingHD, stoppingToken);
+
+            // ═══════════════════════════════════════════════════════════════
+            // Phase 3: Game packet processing (pipe-based)
+            // ═══════════════════════════════════════════════════════════════
+            var fillTask  = FillPipeAsync(netStream, pipe.Writer, session.CancellationToken, stoppingToken);
             var readTask  = ReadPipeAsync(pipe.Reader, session, stoppingToken);
             await Task.WhenAll(fillTask, readTask);
         }
@@ -74,6 +144,13 @@ public sealed class TcpBackgroundService : BackgroundService
         }
         finally
         {
+            // Clean up game engine slot
+            if (session.Entity is { } p && p.PlayerId > 0)
+            {
+                _engine.RemovePlayer(p.PlayerId);
+                _logger.LogInformation("Player '{User}' removed from world", p.Username);
+            }
+
             _sessions.RemoveSession(session.SessionId);
             await session.DisposeAsync();
             _logger.LogInformation("Session {Id} disconnected", session.SessionId);
