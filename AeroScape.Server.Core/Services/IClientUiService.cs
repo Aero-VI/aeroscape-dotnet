@@ -5,6 +5,7 @@ namespace AeroScape.Server.Core.Services;
 public interface IClientUiService
 {
     void SendMessage(Player player, string message);
+    void ShowLongTextInput(Player player, int inputId, string question);
     void OpenBank(Player player);
     void OpenShop(Player player, string title);
     void RefreshShop(Player player);

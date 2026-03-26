@@ -123,7 +123,6 @@ builder.Services.AddScoped<IMessageHandler<ItemOnObjectMessage>, ItemOnObjectMes
 builder.Services.AddScoped<IMessageHandler<ItemOnNPCMessage>, ItemOnNPCMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<AssaultMessage>, AssaultMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<BountyHunterMessage>, BountyHunterMessageHandler>();
-builder.Services.AddScoped<IMessageHandler<ClanChatMessage>, ClanChatMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<PrayerMessage>, PrayerMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemOption2Message>, ItemOption2MessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ClanJoinMessage>, ClanJoinMessageHandler>();

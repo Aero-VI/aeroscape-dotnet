@@ -35,6 +35,9 @@ public class NPCOption1MessageHandler : IMessageHandler<NPCOption1Message>
         if (npc is null)
             return Task.CompletedTask;
 
+        if (Combat.CombatFormulas.GetDistance(player.AbsX, player.AbsY, npc.AbsX, npc.AbsY) > 1)
+            return Task.CompletedTask;
+
         switch (npc.NpcType)
         {
             case 312:
@@ -52,10 +55,20 @@ public class NPCOption1MessageHandler : IMessageHandler<NPCOption1Message>
                 break;
             case 682:
             case 6970:
+            case 4947:
+            case 1513:
+            case 522:
+            case 1835:
+            case 1569:
                 _shops.OpenShop(player, npc.NpcType switch
                 {
                     682 => 3,
                     6970 => 11,
+                    4947 => 16,
+                    1513 => 18,
+                    522 => 1,
+                    1835 => 14,
+                    1569 => 13,
                     _ => 1
                 });
                 break;

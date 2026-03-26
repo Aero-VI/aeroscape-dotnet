@@ -34,7 +34,7 @@ public class PlayerVsNpcCombat
 
         var npc = _engine.Npcs[attacker.AttackNPC];
 
-        if (npc == null || npc.IsDead || attacker.IsDead)
+        if (npc == null || attacker.IsDead)
         {
             ResetAttack(attacker);
             return;
@@ -222,14 +222,14 @@ public class PlayerVsNpcCombat
         attacker.RequestFaceTo(npc.NpcId);
 
         int rangeLevel = attacker.SkillLvl[CombatConstants.SkillRanged];
-        int hitDamage = rangeLevel < 15 ? 1 : rangeLevel / 4;
-        hitDamage = CombatFormulas.Random(hitDamage);
+        int xpSeedHit = rangeLevel < 15 ? 1 : rangeLevel / 4;
+        int hitDamage = CombatFormulas.Random(xpSeedHit);
         npc.AppendHit(hitDamage, 0);
         npc.RequestAnim(424, 0);
 
         // Award ranged XP
-        attacker.AddSkillXP(4.0 * hitDamage * CombatConstants.CombatXpRate, CombatConstants.SkillRanged);
-        attacker.AddSkillXP(2.0 * hitDamage * CombatConstants.CombatXpRate, CombatConstants.SkillHitpoints);
+        attacker.AddSkillXP(4.0 * xpSeedHit * CombatConstants.CombatXpRate, CombatConstants.SkillRanged);
+        attacker.AddSkillXP(2.0 * xpSeedHit * CombatConstants.CombatXpRate, CombatConstants.SkillHitpoints);
 
         RetaliateNpc(npc, attacker);
     }

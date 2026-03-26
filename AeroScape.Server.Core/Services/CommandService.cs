@@ -161,7 +161,7 @@ public sealed class CommandService
                     });
                 case "ipmute":
                 case "ipban":
-                    return true;
+                    return false;
             }
         }
 
@@ -232,31 +232,59 @@ public sealed class CommandService
                 case "godoff":
                 case "fullkc":
                 case "bh":
-                case "rebuildnpclist":
                 case "loadobjects":
                 case "savebackup":
                 case "loadbackup":
-                case "object":
                 case "so":
                 case "si":
                 case "ssi":
                 case "scbi":
                 case "emote":
                 case "gfx":
-                case "kill":
-                case "logout":
-                case "walk":
-                case "deleteroom":
-                case "newroom":
-                case "setskill":
-                case "setskills":
                 case "slave":
                 case "private":
                 case "runsc":
                 case "newname":
                 case "givemember":
                 case "removemember":
+                    return false;
+                case "rebuildnpclist":
+                    player.RebuildNPCList = true;
                     return true;
+                case "walk":
+                    player.WalkEmote = player.WalkEmote == 0x333 ? 1851 : 0x333;
+                    return true;
+                case "logout":
+                    player.Disconnected[0] = true;
+                    return true;
+                case "kill":
+                    return SetTarget(args, target =>
+                    {
+                        target.HitDiff1 = target.GetLevelForXP(3);
+                        target.IsDead = true;
+                    });
+                case "setskills":
+                    for (int i = 0; i < Player.SkillCount; i++)
+                    {
+                        player.SkillXP[i] = 510000000;
+                        player.SkillLvl[i] = 136;
+                    }
+                    return true;
+                case "setskill":
+                    if (args.Length >= 3 &&
+                        int.TryParse(args[0], out int skill) &&
+                        int.TryParse(args[2], out int skillXp) &&
+                        skill >= 0 && skill < Player.SkillCount)
+                    {
+                        player.SkillXP[skill] = skillXp;
+                        player.SkillLvl[skill] = player.GetLevelForXP(skill);
+                        return true;
+                    }
+                    return false;
+                case "object":
+                case "newroom":
+                case "deleteroom":
+                    return false;
             }
         }
 

@@ -1,15 +1,18 @@
 using AeroScape.Server.Core.Entities;
+using AeroScape.Server.Core.Engine;
 
 namespace AeroScape.Server.Core.Services;
 
 public sealed class ObjectInteractionService
 {
+    private readonly GameEngine _engine;
     private readonly ShopService _shops;
     private readonly PrayerService _prayer;
     private readonly BountyHunterService _bountyHunter;
 
-    public ObjectInteractionService(ShopService shops, PrayerService prayer, BountyHunterService bountyHunter)
+    public ObjectInteractionService(GameEngine engine, ShopService shops, PrayerService prayer, BountyHunterService bountyHunter)
     {
+        _engine = engine;
         _shops = shops;
         _prayer = prayer;
         _bountyHunter = bountyHunter;
@@ -20,6 +23,9 @@ public sealed class ObjectInteractionService
         player.ClickId = objectId;
         player.ClickX = x;
         player.ClickY = y;
+
+        if (!HasObjectAt(objectId, x, y))
+            return false;
 
         if (AeroScape.Server.Core.Skills.WoodcuttingSkill.FindTree(objectId) is not null)
         {
@@ -81,10 +87,27 @@ public sealed class ObjectInteractionService
 
     public bool HandleOption2(Player player, int objectId, int x, int y)
     {
+        if (!HasObjectAt(objectId, x, y))
+            return false;
+
         if (objectId == 28089)
         {
             player.InterfaceId = 762;
             return true;
+        }
+
+        return false;
+    }
+
+    private bool HasObjectAt(int objectId, int x, int y)
+    {
+        if (y == 0)
+            return true;
+
+        foreach (var obj in _engine.LoadedObjects)
+        {
+            if (obj.ObjectId == objectId && obj.X == x && obj.Y == y)
+                return true;
         }
 
         return false;

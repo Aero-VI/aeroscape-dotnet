@@ -13,12 +13,14 @@ public class NPCOption3MessageHandler : IMessageHandler<NPCOption3Message>
     private readonly ILogger<NPCOption3MessageHandler> _logger;
     private readonly GameEngine _engine;
     private readonly IClientUiService _ui;
+    private readonly ShopService _shops;
 
-    public NPCOption3MessageHandler(ILogger<NPCOption3MessageHandler> logger, GameEngine engine, IClientUiService ui)
+    public NPCOption3MessageHandler(ILogger<NPCOption3MessageHandler> logger, GameEngine engine, IClientUiService ui, ShopService shops)
     {
         _logger = logger;
         _engine = engine;
         _ui = ui;
+        _shops = shops;
     }
 
     public Task HandleAsync(PlayerSession session, NPCOption3Message message, CancellationToken cancellationToken)
@@ -31,6 +33,9 @@ public class NPCOption3MessageHandler : IMessageHandler<NPCOption3Message>
         if (npc is null)
             return Task.CompletedTask;
 
+        if (Combat.CombatFormulas.GetDistance(player.AbsX, player.AbsY, npc.AbsX, npc.AbsY) > 1)
+            return Task.CompletedTask;
+
         switch (npc.NpcType)
         {
             case 548:
@@ -38,6 +43,9 @@ public class NPCOption3MessageHandler : IMessageHandler<NPCOption3Message>
                 break;
             case 553:
                 player.SetCoords(3504, 3575, 0);
+                break;
+            case 1599:
+                _shops.OpenShop(player, 8);
                 break;
             case 4906:
                 _ui.ShowNpcDialogue(player, 4906, "Woodcutting Tutor", "I'll pay you 8 coins per log you bring me.", 9827);

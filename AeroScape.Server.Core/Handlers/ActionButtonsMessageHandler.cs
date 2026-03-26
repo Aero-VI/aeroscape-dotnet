@@ -5,7 +5,6 @@ using AeroScape.Server.Core.Items;
 using AeroScape.Server.Core.Messages;
 using AeroScape.Server.Core.Services;
 using AeroScape.Server.Core.Session;
-
 namespace AeroScape.Server.Core.Handlers;
 
 public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
@@ -17,8 +16,11 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
     private readonly MagicService _magic;
     private readonly ShopService _shops;
     private readonly PrayerService _prayers;
+    private readonly ClanChatService _clanChat;
+    private readonly ConstructionService _construction;
+    private readonly IClientUiService _ui;
 
-    public ActionButtonsMessageHandler(ILogger<ActionButtonsMessageHandler> logger, PlayerBankService bank, TradingService trading, PlayerItemsService items, MagicService magic, ShopService shops, PrayerService prayers)
+    public ActionButtonsMessageHandler(ILogger<ActionButtonsMessageHandler> logger, PlayerBankService bank, TradingService trading, PlayerItemsService items, MagicService magic, ShopService shops, PrayerService prayers, ClanChatService clanChat, ConstructionService construction, IClientUiService ui)
     {
         _logger = logger;
         _bank = bank;
@@ -27,6 +29,9 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
         _magic = magic;
         _shops = shops;
         _prayers = prayers;
+        _clanChat = clanChat;
+        _construction = construction;
+        _ui = ui;
     }
     public Task HandleAsync(PlayerSession session, ActionButtonsMessage message, CancellationToken cancellationToken)
     {
@@ -39,12 +44,35 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
         switch (message.InterfaceId)
         {
             case 192:
-            case 193:
-            case 430:
                 _magic.TryCastModernAction(player, message.ButtonId);
                 break;
-            case 187:
+            case 193:
+                _magic.TryCastAncientAction(player, message.ButtonId);
+                break;
+            case 430:
                 _magic.TryCastLunarAction(player, message.ButtonId);
+                break;
+            case 589:
+                if (message.ButtonId == 9)
+                {
+                    _ui.ShowInterface(player, 590);
+                }
+                else if (message.ButtonId == 14)
+                {
+                    _clanChat.SetLootShare(player, !_clanChat.LootShareOn(player));
+                }
+                break;
+            case 590:
+                if (message.ButtonId == 22)
+                {
+                    if (message.PacketOpcode == 233)
+                        _ui.ShowLongTextInput(player, 0, "Enter clan prefix:");
+                    else if (message.PacketOpcode == 21)
+                        _clanChat.CreateOrRenameChat(player, string.Empty);
+                }
+                break;
+            case 402:
+                _construction.AddRoom(player, message.ButtonId - 160);
                 break;
             case 300:
                 player.Smithing.SmithItem(message.ButtonId);

@@ -16,6 +16,12 @@ public sealed class ClientUiService : IClientUiService
     public void SendMessage(Player player, string message)
         => Write(player, w => _frames.SendMessage(w, message));
 
+    public void ShowLongTextInput(Player player, int inputId, string question)
+    {
+        player.InputId = inputId;
+        Write(player, w => _frames.RunScript(w, 109, [question], "s"));
+    }
+
     public void OpenBank(Player player)
     {
         Write(player, w =>

@@ -71,7 +71,10 @@ public sealed class ConstructionService
             return false;
 
         var house = _houses.GetOrAdd(player.PersistentId, _ => new HouseState());
-        house.Rooms.Add(roomId + 1);
+        if (!TryResolveNextRoom(player, out var roomX, out var roomY))
+            return false;
+
+        house.Rooms[(roomX, roomY)] = roomId + 1;
         Save(player, house);
         DeleteItem(player, 995, price);
         return true;
@@ -102,7 +105,8 @@ public sealed class ConstructionService
             DecreaseCan(player);
 
         var house = _houses.GetOrAdd(player.PersistentId, _ => new HouseState());
-        house.Furniture[spot] = objectId;
+        var roomCoords = GetRoomCoords(player);
+        house.Furniture[(roomCoords.RoomX, roomCoords.RoomY, spot)] = objectId;
         Save(player, house);
         return true;
     }
@@ -111,7 +115,8 @@ public sealed class ConstructionService
     {
         if (_houses.TryGetValue(player.PersistentId, out var house))
         {
-            house.Furniture.Remove(spot);
+            var roomCoords = GetRoomCoords(player);
+            house.Furniture.Remove((roomCoords.RoomX, roomCoords.RoomY, spot));
             Save(player, house);
         }
     }
@@ -125,9 +130,21 @@ public sealed class ConstructionService
         switch (objectId)
         {
             case 15314:
+                _ui.ShowInterface(player, 402);
+                break;
             case 15307:
             case 15308:
+                SetNextRoom(player, x, y);
                 _ui.ShowInterface(player, 402);
+                break;
+            case 15361:
+                _ui.ShowInterface(player, 396);
+                break;
+            case 15364:
+            case 15365:
+            case 15366:
+            case 15367:
+                _ui.ShowInterface(player, 394);
                 break;
             case 13431:
             case 13432:
@@ -209,8 +226,8 @@ public sealed class ConstructionService
 
     private sealed class HouseState
     {
-        public List<int> Rooms { get; } = [];
-        public Dictionary<int, int> Furniture { get; } = [];
+        public Dictionary<(int X, int Y), int> Rooms { get; } = [];
+        public Dictionary<(int X, int Y, int Spot), int> Furniture { get; } = [];
     }
 
     private void EnsureLoaded(Player player)
@@ -223,8 +240,14 @@ public sealed class ConstructionService
         {
             foreach (var part in player.ConstructionRoomsData.Split(',', StringSplitOptions.RemoveEmptyEntries))
             {
-                if (int.TryParse(part, out var room))
-                    house.Rooms.Add(room);
+                var pieces = part.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                if (pieces.Length == 3 &&
+                    int.TryParse(pieces[0], out var x) &&
+                    int.TryParse(pieces[1], out var y) &&
+                    int.TryParse(pieces[2], out var room))
+                {
+                    house.Rooms[(x, y)] = room;
+                }
             }
         }
 
@@ -233,11 +256,13 @@ public sealed class ConstructionService
             foreach (var part in player.ConstructionFurnitureData.Split(',', StringSplitOptions.RemoveEmptyEntries))
             {
                 var pieces = part.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                if (pieces.Length == 2 &&
-                    int.TryParse(pieces[0], out var spot) &&
-                    int.TryParse(pieces[1], out var objectId))
+                if (pieces.Length == 4 &&
+                    int.TryParse(pieces[0], out var x) &&
+                    int.TryParse(pieces[1], out var y) &&
+                    int.TryParse(pieces[2], out var spot) &&
+                    int.TryParse(pieces[3], out var objectId))
                 {
-                    house.Furniture[spot] = objectId;
+                    house.Furniture[(x, y, spot)] = objectId;
                 }
             }
         }
@@ -247,7 +272,60 @@ public sealed class ConstructionService
 
     private static void Save(Player player, HouseState house)
     {
-        player.ConstructionRoomsData = string.Join(',', house.Rooms);
-        player.ConstructionFurnitureData = string.Join(',', house.Furniture.Select(pair => $"{pair.Key}:{pair.Value}"));
+        player.ConstructionRoomsData = string.Join(',', house.Rooms.Select(pair => $"{pair.Key.X}:{pair.Key.Y}:{pair.Value}"));
+        player.ConstructionFurnitureData = string.Join(',', house.Furniture.Select(pair => $"{pair.Key.X}:{pair.Key.Y}:{pair.Key.Spot}:{pair.Value}"));
+    }
+
+    private static (int RoomX, int RoomY) GetRoomCoords(Player player)
+    {
+        int roomX = (int)System.Math.Floor((player.LastObjectX - 8 * (player.MapRegionX - 6)) / 8.0);
+        int roomY = (int)System.Math.Floor((player.LastObjectY - 8 * (player.MapRegionY - 6)) / 8.0);
+        return (roomX, roomY);
+    }
+
+    private static void SetNextRoom(Player player, int x, int y)
+    {
+        int objArrayX = (int)System.Math.Floor((x - 8 * (player.MapRegionX - 6)) / 8.0);
+        int objArrayY = (int)System.Math.Floor((y - 8 * (player.MapRegionY - 6)) / 8.0);
+        int objLocalX = x - 8 * (player.MapRegionX - 6);
+        int objLocalY = y - 8 * (player.MapRegionY - 6);
+        int squareX = objLocalX - (8 * objArrayX);
+        int squareY = objLocalY - (8 * objArrayY);
+
+        if ((squareX == 0 && squareY is 3 or 4))
+            player.NextRoom[0] = 4;
+        if ((squareX == 7 && squareY is 3 or 4))
+            player.NextRoom[0] = 2;
+        if ((squareY == 0 && squareX is 3 or 4))
+            player.NextRoom[0] = 3;
+        if ((squareY == 7 && squareX is 3 or 4))
+            player.NextRoom[0] = 1;
+
+        player.NextRoom[1] = objArrayX;
+        player.NextRoom[2] = objArrayY;
+    }
+
+    private static bool TryResolveNextRoom(Player player, out int roomX, out int roomY)
+    {
+        roomX = player.NextRoom[1];
+        roomY = player.NextRoom[2];
+
+        switch (player.NextRoom[0])
+        {
+            case 1:
+                roomY++;
+                return true;
+            case 2:
+                roomX++;
+                return true;
+            case 3:
+                roomY--;
+                return true;
+            case 4:
+                roomX--;
+                return true;
+            default:
+                return false;
+        }
     }
 }

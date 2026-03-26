@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AeroScape.Server.Core.Combat;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Items;
 
@@ -72,6 +73,28 @@ public sealed class MagicService(PlayerItemsService playerItems)
         player.RequestGfx(726, 0);
         player.VengOn = true;
         player.LastVengeanceTime = now;
+        return true;
+    }
+
+    public bool TryCastAncientAction(Player player, int buttonId)
+    {
+        if (buttonId != 24)
+            return false;
+
+        if (player.HomeTeleDelay > 0)
+            return false;
+
+        player.HomeTele = 15;
+        player.AncientsHomeTele = true;
+        return true;
+    }
+
+    public bool TryConsumeCombatRunes(Player player, SpellDefinition spell)
+    {
+        if (!HasRunes(player, spell.RuneRequirements.Select(r => (r.RuneId, r.Amount)).ToArray()))
+            return false;
+
+        ConsumeRunes(player, spell.RuneRequirements.Select(r => (r.RuneId, r.Amount)).ToArray());
         return true;
     }
 

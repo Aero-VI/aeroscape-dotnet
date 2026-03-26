@@ -33,6 +33,9 @@ public class NPCOption2MessageHandler : IMessageHandler<NPCOption2Message>
         if (npc is null)
             return Task.CompletedTask;
 
+        if (Combat.CombatFormulas.GetDistance(player.AbsX, player.AbsY, npc.AbsX, npc.AbsY) > 1)
+            return Task.CompletedTask;
+
         switch (npc.NpcType)
         {
             case 312:
