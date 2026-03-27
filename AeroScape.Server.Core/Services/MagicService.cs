@@ -96,10 +96,13 @@ public sealed class MagicService(PlayerItemsService playerItems, IClientUiServic
         if (spell == null || spell.RuneRequirements == null)
             return false;
             
-        if (!HasRunes(player, spell.RuneRequirements.Select(r => (r.RuneId, r.Amount)).ToArray()))
+        // Cache rune requirements to prevent potential race conditions from accessing twice
+        var runeRequirements = spell.RuneRequirements.Select(r => (r.RuneId, r.Amount)).ToArray();
+        
+        if (!HasRunes(player, runeRequirements))
             return false;
 
-        ConsumeRunes(player, spell.RuneRequirements.Select(r => (r.RuneId, r.Amount)).ToArray());
+        ConsumeRunes(player, runeRequirements);
         return true;
     }
 

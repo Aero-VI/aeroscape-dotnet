@@ -148,7 +148,8 @@ public class WoodcuttingSkill : GatheringSkillBase
 
         // Grant XP: Java formula is (BaseXp * wcLevel) / 3
         int wcLevel = _player.SkillLvl[SkillConstants.Woodcutting];
-        double xp = (_currentTree.BaseXp * wcLevel) / 3.0;
+        const double divisor = 3.0;
+        double xp = divisor > 0 ? (_currentTree.BaseXp * wcLevel) / divisor : 0;
         _player.AddSkillXP(xp, SkillConstants.Woodcutting);
 
         // TODO: p.frames.sendMessage(p, "You cut some logs.");

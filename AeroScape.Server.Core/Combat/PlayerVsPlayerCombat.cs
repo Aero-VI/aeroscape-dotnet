@@ -74,8 +74,8 @@ public class PlayerVsPlayerCombat
         attacker.FollowingPlayer = true;
 
         // ── Determine combat type and execute ──────────────────────────────
-        // Check equipment bounds before accessing weapon slot
-        if (CombatConstants.SlotWeapon < 0 || CombatConstants.SlotWeapon >= attacker.Equipment.Length)
+        // Check if equipment array has enough slots for weapon slot access
+        if (attacker.Equipment.Length <= CombatConstants.SlotWeapon)
         {
             ResetAttack(attacker);
             return;
