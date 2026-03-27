@@ -191,6 +191,13 @@ public sealed class TcpBackgroundService : BackgroundService
                 int bytesRead = await stream.ReadAsync(memory, cts.Token);
                 if (bytesRead == 0) break; // client disconnected
 
+                // DEBUG: Log raw bytes received
+                if (bytesRead > 0)
+                {
+                    var bytes = memory.Slice(0, bytesRead).ToArray();
+                    Console.WriteLine($"[TCP] Received {bytesRead} bytes: {BitConverter.ToString(bytes)}");
+                }
+
                 writer.Advance(bytesRead);
                 var result = await writer.FlushAsync(cts.Token);
                 if (result.IsCompleted) break;

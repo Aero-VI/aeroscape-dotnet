@@ -141,6 +141,9 @@ public sealed class PacketRouter
             // RS 508 protocol: the Java server reads raw opcodes without ISAAC decryption.
             // The client does NOT encrypt post-login packet opcodes with ISAAC in this revision.
             int opcode = rawOpcode & 0xFF;
+            
+            // DEBUG: Log every opcode we receive
+            Console.WriteLine($"[PACKET-PARSE] Raw opcode: {opcode} (0x{opcode:X2}) from session {session.SessionId}");
 
             if ((uint)opcode >= ProtocolDictionary.Incoming.Length)
             {
