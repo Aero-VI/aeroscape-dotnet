@@ -415,7 +415,15 @@ public class GameEngine : BackgroundService
     private void ProcessGlobalTimers()
     {
         // Update player count (mirrors Java Engine constPlayers tracking)
-        PlayersInGame = Players.Count(p => p != null && p.Online);
+        // Thread-safe player count (avoid LINQ enumeration on potentially concurrently-modified array)
+        int count = 0;
+        for (int i = 1; i < Players.Length; i++)
+        {
+            var p = Players[i];
+            if (p != null && p.Online)
+                count++;
+        }
+        PlayersInGame = count;
         
         if (FightPitTimer > 0) FightPitTimer--;
         if (FightPitTimer == 0) FightPitTimer = -1;
