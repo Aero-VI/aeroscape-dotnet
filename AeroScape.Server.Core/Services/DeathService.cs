@@ -273,6 +273,10 @@ public sealed class DeathService
         {
             engine.LoadedObjects.Add(new LoadedObject(12719, player.gsX, player.gsY, 0, 10));
         }
+        
+        // Send gravestone message like Java implementation
+        player.LastTickMessage = "Your gravestone will last two minutes";
+        
         player.AppearanceUpdateReq = true;
         player.UpdateReq = true;
     }
