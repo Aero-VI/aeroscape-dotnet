@@ -149,7 +149,7 @@ public sealed class ClanChatService
         {
             target.VisitingClanName = string.Empty;
             target.ClanChannel = 0;
-            _ui.SendMessage(target, "You've been kick from the chat.");
+            _ui.SendMessage(target, "You've been kicked from the chat.");
             _ui.ResetClanChatList(target);
         }
 

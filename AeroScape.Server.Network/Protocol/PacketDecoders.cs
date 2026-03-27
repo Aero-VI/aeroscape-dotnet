@@ -262,22 +262,18 @@ public sealed class ActionButtonsDecoder : IPacketDecoder
         var r = new RsReader(payload);
         int interfaceId, buttonId, itemId = -1, slotId = -1;
 
+        // Java reads two separate words: readUnsignedWord() for interfaceId, then readUnsignedWord() for buttonId
+        // Java ref: ActionButtons.java:44-47
+        interfaceId = r.ReadUnsignedWord();
+        buttonId = r.ReadUnsignedWord();
+        
         if (payload.Length == 6)
         {
-            int packed = r.ReadDWord();
-            interfaceId = packed >> 16;
-            buttonId = packed & 0xFFFF;
             slotId = r.ReadUnsignedWord();
             if (slotId == 65535)
             {
                 slotId = 0;
             }
-        }
-        else // 4-byte variant
-        {
-            int packed = r.ReadDWord();
-            interfaceId = packed >> 16;
-            buttonId = packed & 0xFFFF;
         }
 
         return new ActionButtonsMessage(opcode, interfaceId, buttonId, itemId, slotId);
@@ -292,12 +288,13 @@ public sealed class EquipItemDecoder : IPacketDecoder
     public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
     {
         var r = new RsReader(payload);
-        int packed = r.ReadDWordV2();
-        int interfaceId = packed >> 16;
+        // Java reads readDWord_v2() as junk and ignores it, then reads readUnsignedWordBigEndian() for itemId
+        // Java ref: Equipment.java:76-77
+        int junk = r.ReadDWordV2(); // Java ignores this completely
         int itemId = r.ReadUnsignedWordBigEndian();
         int slot = r.ReadByte();
         r.ReadByte();
-        return new EquipItemMessage(itemId, slot, interfaceId);
+        return new EquipItemMessage(itemId, slot, -1); // No interfaceId extracted in Java
     }
 }
 
@@ -454,8 +451,8 @@ public sealed class ObjectOption2Decoder : IPacketDecoder
 
     public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
     {
-        // Opcode 228 is 6 bytes: word (unused/playerId) + word (objectX) + word (objectY)
-        // The actual objectId is read later in the handler after distance check (Java ObjectOption2.java:56)
+        // Opcode 228 is 6 bytes: word (playerId) + word (objectX) + word (objectY)
+        // NOTE: Java ObjectOption2.java handles player interactions, not object interactions
         var r = new RsReader(payload);
         int firstWord = r.ReadUnsignedWord();
         int objectX = r.ReadUnsignedWord();

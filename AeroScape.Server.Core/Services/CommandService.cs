@@ -70,6 +70,56 @@ public sealed class CommandService
             case "house":
                 player.SetCoords(3104, 3926, player.HouseHeight);
                 return true;
+            case "enter":
+                if (args.Length == 0)
+                    return false;
+                
+                string targetPlayerName = string.Join(' ', args);
+                int targetId = _engine.GetIdFromName(targetPlayerName);
+                var targetPlayer = targetId > 0 ? _engine.Players[targetId] : null;
+                
+                if (targetPlayer?.PlayerId == player.PlayerId)
+                {
+                    _ui.SendMessage(player, "Use ::house to enter your own house!");
+                    return true;
+                }
+                
+                if (targetPlayer == null)
+                {
+                    _ui.SendMessage(player, $"{targetPlayerName} is offline.");
+                    return true;
+                }
+                
+                if (targetPlayer.HouseLocked)
+                {
+                    _ui.SendMessage(player, $"{targetPlayer.Username}'s house is locked.");
+                    return true;
+                }
+                
+                // Special house coordinates for specific users (from Java implementation)
+                if (targetPlayer.Username.Equals("abbo", StringComparison.OrdinalIgnoreCase) || 
+                    targetPlayer.Username.Equals("mother earth", StringComparison.OrdinalIgnoreCase))
+                {
+                    player.SetCoords(3104, 3926, targetPlayer.HouseHeight); // Using default house coords + offset
+                    _ui.SendMessage(player, $"You enter {targetPlayer.Username}'s house.");
+                    _ui.SendMessage(targetPlayer, $"{player.Username} has entered your house.");
+                    return true;
+                }
+                
+                if (targetPlayer.Username.Equals("richman55", StringComparison.OrdinalIgnoreCase) || 
+                    targetPlayer.Username.Equals("karaliesa", StringComparison.OrdinalIgnoreCase))
+                {
+                    player.SetCoords(3104, 3926, targetPlayer.HouseHeight); // Using default house coords + offset
+                    _ui.SendMessage(player, $"You enter {targetPlayer.Username}'s house.");
+                    _ui.SendMessage(targetPlayer, $"{player.Username} has entered your house.");
+                    return true;
+                }
+                
+                // Default house entry logic
+                player.SetCoords(3104, 3926, targetPlayer.HouseHeight);
+                _ui.SendMessage(player, $"You enter {targetPlayer.Username}'s house.");
+                _ui.SendMessage(targetPlayer, $"{player.Username} has entered your house.");
+                return true;
             case "lock":
                 player.HouseLocked = true;
                 return true;
