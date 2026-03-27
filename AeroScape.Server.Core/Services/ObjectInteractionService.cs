@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Engine;
 
@@ -5,14 +6,17 @@ namespace AeroScape.Server.Core.Services;
 
 public sealed class ObjectInteractionService
 {
-    private readonly GameEngine _engine;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ShopService _shops;
     private readonly PrayerService _prayer;
     private readonly BountyHunterService _bountyHunter;
+    
+    private GameEngine? _engine;
+    private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
 
-    public ObjectInteractionService(GameEngine engine, ShopService shops, PrayerService prayer, BountyHunterService bountyHunter)
+    public ObjectInteractionService(IServiceProvider serviceProvider, ShopService shops, PrayerService prayer, BountyHunterService bountyHunter)
     {
-        _engine = engine;
+        _serviceProvider = serviceProvider;
         _shops = shops;
         _prayer = prayer;
         _bountyHunter = bountyHunter;
@@ -101,7 +105,7 @@ public sealed class ObjectInteractionService
 
     private bool HasObjectAt(int objectId, int x, int y)
     {
-        foreach (var obj in _engine.LoadedObjects)
+        foreach (var obj in Engine.LoadedObjects)
         {
             if (obj.ObjectId == objectId && obj.X == x && obj.Y == y)
                 return true;

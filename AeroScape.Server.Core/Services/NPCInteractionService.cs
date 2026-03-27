@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
 
@@ -7,20 +8,23 @@ namespace AeroScape.Server.Core.Services;
 public class NPCInteractionService
 {
     private readonly ILogger<NPCInteractionService> _logger;
-    private readonly GameEngine _engine;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ShopService _shops;
     private readonly DialogueService _dialogues;
     private readonly IClientUiService _ui;
+    
+    private GameEngine? _engine;
+    private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
 
     public NPCInteractionService(
         ILogger<NPCInteractionService> logger, 
-        GameEngine engine, 
+        IServiceProvider serviceProvider,
         ShopService shops, 
         DialogueService dialogues, 
         IClientUiService ui)
     {
         _logger = logger;
-        _engine = engine;
+        _serviceProvider = serviceProvider;
         _shops = shops;
         _dialogues = dialogues;
         _ui = ui;

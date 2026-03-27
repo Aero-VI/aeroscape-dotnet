@@ -1,10 +1,20 @@
+using Microsoft.Extensions.DependencyInjection;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
 
 namespace AeroScape.Server.Core.Services;
 
-public sealed class BountyHunterService(GameEngine engine)
+public sealed class BountyHunterService
 {
+    private readonly IServiceProvider _serviceProvider;
+    private GameEngine? _engine;
+    private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
+
+    public BountyHunterService(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
     public bool IsBountyArea(int x, int y)
         => x >= 3085 && x <= 3185 && y >= 3662 && y <= 3765;
 
@@ -41,7 +51,7 @@ public sealed class BountyHunterService(GameEngine engine)
         if (!player.Online || !IsBountyArea(player.AbsX, player.AbsY) || player.SkillLvl[3] <= 0)
             return;
 
-        foreach (var candidate in engine.Players)
+        foreach (var candidate in Engine.Players)
         {
             if (candidate is null || !candidate.Online || candidate == player)
                 continue;
@@ -65,7 +75,7 @@ public sealed class BountyHunterService(GameEngine engine)
             return;
         }
 
-        var target = targetId >= engine.Players.Length ? null : engine.Players[targetId];
+        var target = targetId >= Engine.Players.Length ? null : Engine.Players[targetId];
         if (target is null || !target.Online)
             return;
 
@@ -73,8 +83,8 @@ public sealed class BountyHunterService(GameEngine engine)
     }
 
     private Player? GetOpponent(Player player)
-        => player.BountyOpponent > 0 && player.BountyOpponent < engine.Players.Length
-            ? engine.Players[player.BountyOpponent]
+        => player.BountyOpponent > 0 && player.BountyOpponent < Engine.Players.Length
+            ? Engine.Players[player.BountyOpponent]
             : null;
 
     private static void Teleport(Player player, int x, int y)

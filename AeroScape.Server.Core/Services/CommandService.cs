@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Session;
@@ -11,17 +12,20 @@ namespace AeroScape.Server.Core.Services;
 
 public sealed class CommandService
 {
-    private readonly GameEngine _engine;
+    private readonly IServiceProvider _serviceProvider;
     private readonly InventoryService _inventory;
     private readonly ShopService _shops;
     private readonly IPlayerSessionManager _sessions;
     private readonly IClientUiService _ui;
     private readonly LegacyFileManager _fileManager;
     private readonly GameFrames _frames;
+    
+    private GameEngine? _engine;
+    private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
 
-    public CommandService(GameEngine engine, InventoryService inventory, ShopService shops, IPlayerSessionManager sessions, IClientUiService ui, LegacyFileManager fileManager, GameFrames frames)
+    public CommandService(IServiceProvider serviceProvider, InventoryService inventory, ShopService shops, IPlayerSessionManager sessions, IClientUiService ui, LegacyFileManager fileManager, GameFrames frames)
     {
-        _engine = engine;
+        _serviceProvider = serviceProvider;
         _inventory = inventory;
         _shops = shops;
         _sessions = sessions;
@@ -77,8 +81,8 @@ public sealed class CommandService
                     return false;
                 
                 string targetPlayerName = string.Join(' ', args);
-                int targetId = _engine.GetIdFromName(targetPlayerName);
-                var targetPlayer = targetId > 0 ? _engine.Players[targetId] : null;
+                int targetId = Engine.GetIdFromName(targetPlayerName);
+                var targetPlayer = targetId > 0 ? Engine.Players[targetId] : null;
                 
                 if (targetPlayer?.PlayerId == player.PlayerId)
                 {
@@ -162,7 +166,7 @@ public sealed class CommandService
                 }
                 return true;
             case "players":
-                _ui.SendMessage(player, $"There are currently {_engine.GetPlayerCount()} players online.");
+                _ui.SendMessage(player, $"There are currently {Engine.GetPlayerCount()} players online.");
                 return true;
             case "commands":
             case "help":
@@ -316,8 +320,8 @@ public sealed class CommandService
                 if (args.Length > 0)
                 {
                     string person = string.Join(' ', args);
-                    int id = _engine.GetIdFromName(person);
-                    var target = id > 0 ? _engine.Players[id] : null;
+                    int id = Engine.GetIdFromName(person);
+                    var target = id > 0 ? Engine.Players[id] : null;
                     if (target != null)
                     {
                         _ui.SendMessage(player, $"{person} is located at: {target.LocatedAt}");
@@ -423,7 +427,7 @@ public sealed class CommandService
                     return SetTarget(args, target => target.SetCoords(player.AbsX, player.AbsY, player.HeightLevel));
                 case "npc":
                     if (args.Length >= 1 && int.TryParse(args[0], out int npcType))
-                        _engine.SpawnNpc(npcType, player.AbsX + 1, player.AbsY, player.HeightLevel, player.AbsX - 1, player.AbsY - 1, player.AbsX + 1, player.AbsY + 1, true);
+                        Engine.SpawnNpc(npcType, player.AbsX + 1, player.AbsY, player.HeightLevel, player.AbsX - 1, player.AbsY - 1, player.AbsX + 1, player.AbsY + 1, true);
                     return true;
                 case "pnpc":
                     if (args.Length >= 1 && int.TryParse(args[0], out int morph))
@@ -617,9 +621,9 @@ public sealed class CommandService
 
     private void Broadcast(string message)
     {
-        for (int i = 1; i < _engine.Players.Length; i++)
+        for (int i = 1; i < Engine.Players.Length; i++)
         {
-            var target = _engine.Players[i];
+            var target = Engine.Players[i];
             if (target is { Online: true })
                 _ui.SendMessage(target, message);
         }
@@ -636,11 +640,11 @@ public sealed class CommandService
         if (args.Length == 0)
             return false;
 
-        int id = _engine.GetIdFromName(string.Join(' ', args));
+        int id = Engine.GetIdFromName(string.Join(' ', args));
         if (id <= 0)
             return false;
 
-        var target = _engine.Players[id];
+        var target = Engine.Players[id];
         if (target == null)
             return false;
 
@@ -677,7 +681,7 @@ public sealed class CommandService
     private void CreateGlobalObject(int objectId, int height, int objectX, int objectY, int face, int type)
     {
         var writerFactory = (Player p) => new FrameWriter(4096);
-        _frames.CreateGlobalObject(_engine.Players, objectId, height, objectX, objectY, face, type, writerFactory);
+        _frames.CreateGlobalObject(Engine.Players, objectId, height, objectX, objectY, face, type, writerFactory);
     }
 
     private void SaveBackup(Player player)

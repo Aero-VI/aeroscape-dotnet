@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
 using Microsoft.Extensions.Logging;
@@ -8,15 +9,18 @@ namespace AeroScape.Server.Core.Services;
 
 public sealed class ClanChatService
 {
-    private readonly GameEngine _engine;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IClientUiService _ui;
     private readonly IClanChatPersistenceService? _persistence;
     private readonly ILogger<ClanChatService> _logger;
     private readonly ConcurrentDictionary<string, ClanChannel> _channels = new(StringComparer.OrdinalIgnoreCase);
+    
+    private GameEngine? _engine;
+    private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
 
-    public ClanChatService(GameEngine engine, IClientUiService ui, IClanChatPersistenceService? persistence, ILogger<ClanChatService> logger)
+    public ClanChatService(IServiceProvider serviceProvider, IClientUiService ui, IClanChatPersistenceService? persistence, ILogger<ClanChatService> logger)
     {
-        _engine = engine;
+        _serviceProvider = serviceProvider;
         _ui = ui;
         _persistence = persistence;
         _logger = logger;
@@ -61,8 +65,8 @@ public sealed class ClanChatService
         // Use GetOrAdd to avoid race condition between check and add
         var channel = _channels.GetOrAdd(ownerName, key =>
         {
-            int ownerId = _engine.GetIdFromName(key);
-            var owner = ownerId > 0 ? _engine.Players[ownerId] : null;
+            int ownerId = Engine.GetIdFromName(key);
+            var owner = ownerId > 0 ? Engine.Players[ownerId] : null;
             if (owner is null)
                 return null!; // This will be handled below
                 
@@ -105,8 +109,8 @@ public sealed class ClanChatService
             channel.LastMessage = (player.Username, message);
             foreach (var member in channel.Members.Values)
             {
-                int id = _engine.GetIdFromName(member.Name);
-                var target = id > 0 ? _engine.Players[id] : null;
+                int id = Engine.GetIdFromName(member.Name);
+                var target = id > 0 ? Engine.Players[id] : null;
                 if (target is not null)
                     _ui.SendClanChat(target, player, channel.ClanName, message);
             }
@@ -148,8 +152,8 @@ public sealed class ClanChatService
         if (!channel.Members.TryRemove(name, out _))
             return false;
 
-        int id = _engine.GetIdFromName(name);
-        var target = id > 0 ? _engine.Players[id] : null;
+        int id = Engine.GetIdFromName(name);
+        var target = id > 0 ? Engine.Players[id] : null;
         if (target is not null)
         {
             target.VisitingClanName = string.Empty;
