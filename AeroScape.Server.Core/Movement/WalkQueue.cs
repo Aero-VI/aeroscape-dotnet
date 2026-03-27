@@ -27,6 +27,9 @@ public sealed class WalkQueue
 
     public void HandleWalk(Player player, WalkMessage message)
     {
+        _logger?.LogInformation("HandleWalk called for {Username}: first=({X},{Y}) running={Running}", 
+            player.Username, message.FirstX, message.FirstY, message.IsRunning);
+        
         ClearInteractions(player);
         
         // Restore interface like Java Walking.java:14 and 45-48
