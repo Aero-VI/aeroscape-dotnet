@@ -1,18 +1,17 @@
 using AeroScape.Server.Core.Combat;
 using AeroScape.Server.Core.Entities;
-using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Frames;
 
 namespace AeroScape.Server.Core.Items;
 
-public sealed class GroundItemManager(ItemDefinitionLoader itemDefinitions, GameFrames frames, GameEngine engine)
+public sealed class GroundItemManager(ItemDefinitionLoader itemDefinitions, GameFrames frames)
 {
     private const int MaxGroundItems = 1000;
     private readonly GroundItemState?[] _groundItems = new GroundItemState?[MaxGroundItems];
 
     public IReadOnlyList<GroundItemState?> GroundItems => _groundItems;
 
-    public void Process()
+    public void Process(Player?[] players)
     {
         for (var i = 0; i < _groundItems.Length; i++)
         {
@@ -35,14 +34,14 @@ public sealed class GroundItemManager(ItemDefinitionLoader itemDefinitions, Game
                 {
                     groundItem.IsGlobal = true;
                     // Send createGlobalItem frame notifications like Java Items.java:71-85
-                    NotifyPlayersInRange(groundItem, true);
+                    NotifyPlayersInRange(players, groundItem, true);
                 }
             }
 
             if (groundItem.ItemGroundTime <= 0)
             {
                 // Send removeGroundItem frame notifications like Java Items.java:71-85
-                NotifyPlayersInRange(groundItem, false);
+                NotifyPlayersInRange(players, groundItem, false);
                 _groundItems[i] = null;
             }
         }
@@ -129,10 +128,10 @@ public sealed class GroundItemManager(ItemDefinitionLoader itemDefinitions, Game
         }
     }
 
-    private void NotifyPlayersInRange(GroundItemState groundItem, bool isCreate)
+    private void NotifyPlayersInRange(Player?[] players, GroundItemState groundItem, bool isCreate)
     {
         // Notify all players in range like Java Items.java:71-85
-        foreach (var player in engine.Players)
+        foreach (var player in players)
         {
             if (player is null || !player.Online)
                 continue;

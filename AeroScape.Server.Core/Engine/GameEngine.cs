@@ -325,7 +325,7 @@ public class GameEngine : BackgroundService
 
         // ── 1. Global timers ────────────────────────────────────────────────
         ProcessGlobalTimers();
-        _groundItems.Process();
+        _groundItems.Process(Players);
         _shops.Process(this);
 
         // ── 2. Player per-tick processing & movement ────────────────────────
