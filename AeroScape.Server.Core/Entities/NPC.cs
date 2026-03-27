@@ -271,9 +271,15 @@ public class NPC
         }
 
         // Handle follow counter logic based on NPC ownership and player combat state
-        if (!player.AttackingNPC && FollowCounter < 4)
+        if (!player.AttackingNPC)
         {
-            FollowCounter++;
+            // Increment counter when player is not attacking, up to limit
+            if (FollowCounter < 4)
+            {
+                FollowCounter++;
+            }
+            // If counter reaches or exceeds 4, NPC will abandon following
+            // (handled by the >= 3 check at the start of this method)
         }
         else if (player.AttackingNPC)
         {

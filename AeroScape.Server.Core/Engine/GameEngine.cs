@@ -695,6 +695,22 @@ public class GameEngine : BackgroundService
         if (p.YellTimer > 0) p.YellTimer--;
         if (p.SuggestionTimer > 0) p.SuggestionTimer--;
 
+        // Gravestone timer
+        if (p.graveStoneTimer > 0)
+        {
+            p.graveStoneTimer--;
+            if (p.graveStoneTimer == 0)
+            {
+                // Remove gravestone from loaded objects
+                lock (LoadedObjects)
+                {
+                    LoadedObjects.RemoveAll(o => 
+                        o.ObjectId == 12719 && o.X == p.gsX && o.Y == p.gsY);
+                }
+                p.graveStoneTimer = -1;
+            }
+        }
+
         // ── Gathering skill processing ─────────────────────────────────────
         // These tick-driven skills were processed in Player.process() in the Java code.
         // Woodcutting and Mining use their own internal timers via GatheringSkillBase.
