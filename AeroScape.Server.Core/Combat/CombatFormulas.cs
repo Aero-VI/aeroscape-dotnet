@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 
 namespace AeroScape.Server.Core.Combat;
 
@@ -8,7 +9,8 @@ namespace AeroScape.Server.Core.Combat;
 /// </summary>
 public static class CombatFormulas
 {
-    private static readonly Random _rng = new();
+    // Thread-safe random number generator using ThreadLocal
+    private static readonly ThreadLocal<Random> _rng = new(() => new Random());
 
     /// <summary>
     /// Roll a random integer from 0..range (inclusive on both ends).
@@ -17,7 +19,9 @@ public static class CombatFormulas
     public static int Random(int range)
     {
         if (range <= 0) return 0;
-        return _rng.Next(range + 1);
+        // Prevent integer overflow when range is int.MaxValue
+        if (range == int.MaxValue) return _rng.Value.Next(range);
+        return _rng.Value.Next(range + 1);
     }
 
     /// <summary>

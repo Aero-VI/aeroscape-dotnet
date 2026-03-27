@@ -35,7 +35,17 @@ public class PlayerVsPlayerCombat
             return;
         }
 
-        var target = _engine.Players[attacker.AttackPlayer];
+        // Thread-safe access to prevent race conditions
+        Player target;
+        try
+        {
+            target = _engine.Players[attacker.AttackPlayer];
+        }
+        catch (IndexOutOfRangeException)
+        {
+            ResetAttack(attacker);
+            return;
+        }
 
         if (target == null || attacker.IsDead || target.IsDead || target.Disconnected[1])
         {
@@ -199,6 +209,14 @@ public class PlayerVsPlayerCombat
     private void ProcessRangedAttack(Player attacker, Player target, int distance)
     {
         if (distance > CombatConstants.MaxRangeDistance)
+        {
+            ResetAttack(attacker);
+            return;
+        }
+
+        // Check bounds for both Equipment and EquipmentN arrays
+        if (attacker.Equipment.Length <= CombatConstants.SlotAmmo || 
+            attacker.EquipmentN.Length <= CombatConstants.SlotAmmo)
         {
             ResetAttack(attacker);
             return;

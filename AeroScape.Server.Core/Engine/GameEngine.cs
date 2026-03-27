@@ -437,8 +437,8 @@ public class GameEngine : BackgroundService
                 if (p != null && p.Online)
                     count++;
             }
+            PlayersInGame = count;
         }
-        PlayersInGame = count;
         
         if (FightPitTimer > 0) FightPitTimer--;
         if (FightPitTimer == 0) FightPitTimer = -1;

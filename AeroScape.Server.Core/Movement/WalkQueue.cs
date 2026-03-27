@@ -300,7 +300,7 @@ public sealed class WalkQueue
         player.FollowPlayerIndex = 0;
     }
 
-    private static void Write(Player player, Action<FrameWriter> build)
+    private void Write(Player player, Action<FrameWriter> build)
     {
         var session = player.Session;
         if (session is null)

@@ -93,11 +93,15 @@ public sealed class MagicService(PlayerItemsService playerItems, IClientUiServic
     public bool TryConsumeCombatRunes(Player player, SpellDefinition spell)
     {
         // Validate spell definition exists to prevent null reference exceptions
-        if (spell == null || spell.RuneRequirements == null)
+        if (spell == null)
             return false;
             
         // Cache rune requirements to prevent potential race conditions from accessing twice
-        var runeRequirements = spell.RuneRequirements.Select(r => (r.RuneId, r.Amount)).ToArray();
+        var requirements = spell.RuneRequirements;
+        if (requirements == null)
+            return false;
+            
+        var runeRequirements = requirements.Select(r => (r.RuneId, r.Amount)).ToArray();
         
         if (!HasRunes(player, runeRequirements))
             return false;
@@ -217,7 +221,8 @@ public sealed class MagicService(PlayerItemsService playerItems, IClientUiServic
             return false;
         if (buttonId >= ModernSpellXp.Length)
             return false;
-            
+        
+        // Now safe to access arrays after bounds check
         if (player.MagicDelay > 0 || player.SkillLvl[6] < ModernLevelRequirements[buttonId] || !HasRunes(player, runes))
             return false;
 
