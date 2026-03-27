@@ -522,14 +522,15 @@ public class GameEngine : BackgroundService
             p.SaveTimer = 10;
         }
 
+        // Only process jail timer if player is actually jailed (timer was set > 0)
         if (p.JailTimer > 0)
         {
             p.JailTimer--;
-        }
-        if (p.JailTimer == 0)
-        {
-            p.RequestForceChat("I have been jailed for breaking the rules.");
-            p.JailTimer = 20;
+            if (p.JailTimer == 0)
+            {
+                p.RequestForceChat("I have been jailed for breaking the rules.");
+                p.JailTimer = 20;
+            }
         }
 
         if (p.AbsX == p.ReqX)
