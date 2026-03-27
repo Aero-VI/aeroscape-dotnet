@@ -202,7 +202,9 @@ public class PlayerVsNpcCombat
             attacker.CombatDelay = attacker.AttackDelay;
             attacker.RequestFaceTo(npc.NpcId);
 
-            npc.AppendHit(meleeSeedHit, 0);
+            // Crystal bow vs NPCs uses Misc.random(30) not melee damage
+            int crystalBowDamage = CombatFormulas.Random(30);
+            npc.AppendHit(crystalBowDamage, 0);
             npc.RequestAnim(npc.DefendEmote, 0);
             RetaliateNpc(npc, attacker);
             return;
@@ -233,8 +235,8 @@ public class PlayerVsNpcCombat
         npc.RequestAnim(424, 0);
 
         // Award ranged XP
-        attacker.AddSkillXP(4.0 * xpSeedHit * CombatConstants.CombatXpRate, CombatConstants.SkillRanged);
-        attacker.AddSkillXP(2.0 * xpSeedHit * CombatConstants.CombatXpRate, CombatConstants.SkillHitpoints);
+        attacker.AddSkillXP(4.0 * hitDamage * CombatConstants.CombatXpRate, CombatConstants.SkillRanged);
+        attacker.AddSkillXP(2.0 * hitDamage * CombatConstants.CombatXpRate, CombatConstants.SkillHitpoints);
 
         RetaliateNpc(npc, attacker);
     }
