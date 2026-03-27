@@ -258,7 +258,7 @@ public sealed class LoginHandler
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Session {Id}: login handshake error", session.SessionId);
+            _logger.LogError(ex, "Session {Id}: login handshake error", session.SessionId);
             return null;
         }
     }
