@@ -178,13 +178,10 @@ public class GameEngine : BackgroundService
     public int GetPlayerCount()
     {
         int count = 0;
-        lock (_playersLock)
+        for (int i = 1; i < Players.Length; i++)
         {
-            for (int i = 1; i < Players.Length; i++)
-            {
-                if (Players[i] != null)
-                    count++;
-            }
+            if (Players[i] != null)
+                count++;
         }
         return count;
     }
@@ -196,14 +193,11 @@ public class GameEngine : BackgroundService
     public int GetIdFromName(string playerName)
     {
         var normalized = playerName.Replace('_', ' ');
-        lock (_playersLock)
+        for (int i = 1; i < Players.Length; i++)
         {
-            for (int i = 1; i < Players.Length; i++)
-            {
-                var p = Players[i];
-                if (p != null && string.Equals(p.Username, normalized, StringComparison.OrdinalIgnoreCase))
-                    return p.PlayerId;
-            }
+            var p = Players[i];
+            if (p != null && string.Equals(p.Username, normalized, StringComparison.OrdinalIgnoreCase))
+                return p.PlayerId;
         }
         return 0;
     }
@@ -335,13 +329,11 @@ public class GameEngine : BackgroundService
         _shops.Process(this);
 
         // ── 2. Player per-tick processing & movement ────────────────────────
-        lock (_playersLock)
+        for (int i = 1; i < Players.Length; i++)
         {
-            for (int i = 1; i < Players.Length; i++)
-            {
-                var p = Players[i];
-                if (p == null || !p.Online)
-                    continue;
+            var p = Players[i];
+            if (p == null || !p.Online)
+                continue;
 
             // Handle disconnection
             if (p.Disconnected[0] && p.Disconnected[1])
@@ -362,37 +354,30 @@ public class GameEngine : BackgroundService
             // Per-player tick (timers, skills, combat delays, death, etc.)
             ProcessPlayerTick(p);
 
-                _walkQueue.Process(p);
-            }
+            _walkQueue.Process(p);
         }
 
         // ── 3. Player update encoding ───────────────────────────────────────
-        lock (_playersLock)
+        for (int i = 1; i < Players.Length; i++)
         {
-            for (int i = 1; i < Players.Length; i++)
-            {
-                var p = Players[i];
-                if (p == null || !p.Online)
-                    continue;
+            var p = Players[i];
+            if (p == null || !p.Online)
+                continue;
 
-                GameUpdateService?.SendPlayerAndNpcUpdates(p);
-            }
+            GameUpdateService?.SendPlayerAndNpcUpdates(p);
         }
 
         // ── 4. Clear player update masks ────────────────────────────────────
-        lock (_playersLock)
+        for (int i = 1; i < Players.Length; i++)
         {
-            for (int i = 1; i < Players.Length; i++)
-            {
-                var p = Players[i];
-                if (p == null || !p.Online)
-                    continue;
+            var p = Players[i];
+            if (p == null || !p.Online)
+                continue;
 
-                if (GameUpdateService != null)
-                    GameUpdateService.ClearPlayerUpdateReqs(p);
-                else
-                    ClearPlayerUpdateReqs(p);
-            }
+            if (GameUpdateService != null)
+                GameUpdateService.ClearPlayerUpdateReqs(p);
+            else
+                ClearPlayerUpdateReqs(p);
         }
 
         // ── 5. NPC processing ───────────────────────────────────────────────

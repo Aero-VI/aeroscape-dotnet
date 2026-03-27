@@ -170,15 +170,6 @@ public sealed class WalkQueue
 
     public void AddToWalkingQueue(Player player, int x, int y)
     {
-        // Validate WQueueWritePtr before array access
-        if (player.WQueueWritePtr <= 0 || 
-            player.WQueueWritePtr >= player.WalkingQueueSize ||
-            player.WalkingQueueX == null || 
-            player.WalkingQueueY == null)
-        {
-            return; // Safe exit
-        }
-
         int diffX = x - player.WalkingQueueX[player.WQueueWritePtr - 1];
         int diffY = y - player.WalkingQueueY[player.WQueueWritePtr - 1];
         int max = Math.Max(Math.Abs(diffX), Math.Abs(diffY));
@@ -253,11 +244,6 @@ public sealed class WalkQueue
         }
 
         int dir = player.WalkingQueue[player.WQueueReadPtr++];
-        
-        // Validate direction bounds
-        if (dir < 0 || dir >= DirectionDeltaX.Length)
-            return -1;
-
         player.CurrentX += DirectionDeltaX[dir];
         player.CurrentY += DirectionDeltaY[dir];
         player.AbsX += DirectionDeltaX[dir];
@@ -321,7 +307,7 @@ public sealed class WalkQueue
             return;
 
         // Use fire-and-forget async to avoid blocking the game thread
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             try
             {
@@ -334,13 +320,6 @@ public sealed class WalkQueue
                 // Log network failures while preventing game thread crashes
                 _logger?.LogWarning(ex, "Network write failed for player {PlayerId}", player.PlayerId);
             }
-        }).ContinueWith(task =>
-        {
-            if (task.IsFaulted && task.Exception != null)
-            {
-                // Handle any unobserved task exceptions
-                _logger?.LogError(task.Exception, "Unhandled exception in Write task for player {PlayerId}", player.PlayerId);
-            }
-        }, TaskContinuationOptions.OnlyOnFaulted);
+        });
     }
 }

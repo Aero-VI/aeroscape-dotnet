@@ -16,12 +16,7 @@ internal ref struct RsReader
 
     public RsReader(ReadOnlySequence<byte> seq) => _r = new SequenceReader<byte>(seq);
 
-    public byte ReadByte() 
-    { 
-        if (!_r.TryRead(out byte b)) 
-            throw new InvalidOperationException("Buffer underrun: attempted to read byte beyond buffer end");
-        return b; 
-    }
+    public byte ReadByte() { _r.TryRead(out byte b); return b; }
     public sbyte ReadSignedByte() => (sbyte)ReadByte();
     public sbyte ReadSignedByteC() => (sbyte)(-ReadByte());
     public sbyte ReadSignedByteS() => (sbyte)(128 - ReadByte());
@@ -452,18 +447,16 @@ public sealed class ObjectOption1Decoder : IPacketDecoder
 /// <summary>Object option 2: opcode 228.</summary>
 public sealed class ObjectOption2Decoder : IPacketDecoder
 {
-    public Type MessageType => typeof(ObjectOption2Message);
+    public Type MessageType => typeof(PlayerOption2Message);
 
     public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
     {
-        // Opcode 228 is a 6-byte packet for object interactions
-        // Despite Java ObjectOption2.java being misnamed/repurposed for player interactions,
-        // the protocol expects object data here: objectId (2 bytes), x (2 bytes), y (2 bytes)
+        // Java ObjectOption2.java handles player interactions, reading playerId then using player coordinates
+        // Fixed: This should be a PlayerOption2Message, not ObjectOption2Message to match Java behavior
         var r = new RsReader(payload);
-        int objectId = r.ReadUnsignedWord();
-        int objectX = r.ReadUnsignedWord();
-        int objectY = r.ReadUnsignedWord();
-        return new ObjectOption2Message(objectId, objectX, objectY);
+        int playerId = r.ReadUnsignedWord();
+        // Return correct message type that matches Java behavior
+        return new PlayerOption2Message(playerId);
     }
 }
 

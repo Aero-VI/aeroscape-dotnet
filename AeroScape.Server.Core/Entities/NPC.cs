@@ -254,7 +254,7 @@ public class NPC
 
     private void AppendPlayerFollowing(Player player)
     {
-        if (FollowCounter >= 4)
+        if (FollowCounter >= 3)
         {
             FollowPlayer = 0;
             AttackingPlayer = false;
