@@ -14,9 +14,9 @@ public sealed class ButtonMessageHandler : IMessageHandler<ButtonMessage>
         _ui = ui;
     }
 
-    public async Task HandleAsync(PlayerSession session, ButtonMessage message)
+    public async Task HandleAsync(PlayerSession session, ButtonMessage message, CancellationToken cancellationToken)
     {
-        var player = session.Player;
+        var player = session.Entity;
         if (player == null)
             return;
 
@@ -25,6 +25,10 @@ public sealed class ButtonMessageHandler : IMessageHandler<ButtonMessage>
         {
             if (message.ButtonId == 24) // Shop item button
             {
+                // Bounds check to prevent array index out of range exception
+                if (message.SlotId < 0 || message.SlotId >= player.ShopItems.Length)
+                    return;
+                    
                 int itemId = player.ShopItems[message.SlotId];
                 switch (message.ItemId) // Using ItemId as packet type identifier
                 {

@@ -60,6 +60,8 @@ public sealed class FrameWriter : IDisposable
 
     public void EndFrameVarSize()
     {
+        if (_frameStackPtr < 0) 
+            throw new InvalidOperationException("EndFrameVarSize called without matching CreateFrameVarSize");
         int start = _frameStack[_frameStackPtr--];
         int size = _offset - start;
         _buf[start - 1] = (byte)size;
@@ -67,6 +69,8 @@ public sealed class FrameWriter : IDisposable
 
     public void EndFrameVarSizeWord()
     {
+        if (_frameStackPtr < 0) 
+            throw new InvalidOperationException("EndFrameVarSizeWord called without matching CreateFrameVarSize");
         int start = _frameStack[_frameStackPtr--];
         int size = _offset - start;
         _buf[start - 2] = (byte)(size >> 8);

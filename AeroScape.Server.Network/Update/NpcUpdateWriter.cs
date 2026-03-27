@@ -198,7 +198,9 @@ public sealed class NpcUpdateWriter
         str.WriteByte(n.HitDiff1);
         if (n.PoisonHit1 == 0) str.WriteByte(n.HitDiff1 > 0 ? 1 : 0);
         else str.WriteByte(2);
-        int hpRatio = (int)Math.Round((double)n.CurrentHP / n.MaxHP * 100) * 255 / 100;
+        int hpRatio = n.MaxHP > 0 
+            ? (int)Math.Round((double)n.CurrentHP / n.MaxHP * 100) * 255 / 100 
+            : 255; // Show full health bar for NPCs with MaxHP = 0
         str.WriteByteS(hpRatio);
     }
 

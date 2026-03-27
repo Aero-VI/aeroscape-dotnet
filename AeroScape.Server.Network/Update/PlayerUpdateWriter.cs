@@ -447,7 +447,8 @@ public sealed class PlayerUpdateWriter
             str.WriteByteS(p.HitDiff1 > 0 ? 1 : 0);
         else
             str.WriteByteS(2);
-        int hpRatio = p.SkillLvl[3] * 255 / p.GetLevelForXP(3);
+        int maxHP = p.GetLevelForXP(3);
+        int hpRatio = maxHP > 0 ? p.SkillLvl[3] * 255 / maxHP : 0;
         str.WriteByteS(hpRatio);
     }
 
