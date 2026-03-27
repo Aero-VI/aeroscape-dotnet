@@ -202,6 +202,10 @@ public sealed class PacketRouter
 
     private async Task DispatchPacketAsync(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
     {
+        // Debug: log walk packets
+        if (opcode == 49 || opcode == 119 || opcode == 138)
+            Console.WriteLine($"[PACKET] Received walk opcode {opcode} from session {session.SessionId}");
+        
         if (!_decoders.TryGetValue(opcode, out var decoder))
         {
             // No decoder for this opcode — silently skip (idle, ping, junk, etc.)
