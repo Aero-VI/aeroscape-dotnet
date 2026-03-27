@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Frames;
 using AeroScape.Server.Core.Messages;
@@ -195,14 +197,25 @@ public sealed class WalkQueue
 
     public void AddStepToWalkingQueue(Player player, int x, int y)
     {
-        int diffX = x - player.WalkingQueueX[player.WQueueWritePtr - 1];
-        int diffY = y - player.WalkingQueueY[player.WQueueWritePtr - 1];
-        int dir = Direction(diffX, diffY);
-
-        if (player.WQueueWritePtr >= player.WalkingQueueSize)
+        // Validate bounds before any array access
+        if (player.WQueueWritePtr >= player.WalkingQueueSize || 
+            player.WQueueWritePtr < 0 ||
+            player.WQueueWritePtr >= player.WalkingQueueX.Length ||
+            player.WQueueWritePtr >= player.WalkingQueueY.Length ||
+            player.WQueueWritePtr >= player.WalkingQueue.Length)
         {
             return;
         }
+
+        // Validate read position bounds
+        if (player.WQueueWritePtr == 0 || (player.WQueueWritePtr - 1) >= player.WalkingQueueX.Length)
+        {
+            return;
+        }
+
+        int diffX = x - player.WalkingQueueX[player.WQueueWritePtr - 1];
+        int diffY = y - player.WalkingQueueY[player.WQueueWritePtr - 1];
+        int dir = Direction(diffX, diffY);
 
         if (dir != -1)
         {
@@ -284,6 +297,17 @@ public sealed class WalkQueue
 
         using var w = new FrameWriter(4096);
         build(w);
-        w.FlushToAsync(session.GetStream(), session.CancellationToken).GetAwaiter().GetResult();
+        // Use fire-and-forget async to avoid blocking the game thread
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await w.FlushToAsync(session.GetStream(), session.CancellationToken);
+            }
+            catch
+            {
+                // Silently handle network failures to prevent game thread crashes
+            }
+        });
     }
 }

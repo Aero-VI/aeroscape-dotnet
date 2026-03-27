@@ -415,13 +415,17 @@ public class GameEngine : BackgroundService
     private void ProcessGlobalTimers()
     {
         // Update player count (mirrors Java Engine constPlayers tracking)
-        // Thread-safe player count (avoid LINQ enumeration on potentially concurrently-modified array)
+        // Thread-safe player count with proper synchronization
         int count = 0;
-        for (int i = 1; i < Players.Length; i++)
+        var playersSnapshot = Players; // Get local reference
+        lock (playersSnapshot) // Synchronize access to prevent race conditions
         {
-            var p = Players[i];
-            if (p != null && p.Online)
-                count++;
+            for (int i = 1; i < playersSnapshot.Length; i++)
+            {
+                var p = playersSnapshot[i];
+                if (p != null && p.Online)
+                    count++;
+            }
         }
         PlayersInGame = count;
         
@@ -445,10 +449,12 @@ public class GameEngine : BackgroundService
         }
 
         var zamorakCarrier = ZamorakP > 0 && ZamorakP < Players.Length ? Players[ZamorakP] : null;
-        if (zamorakCarrier == null)
+        if (zamorakCarrier == null || !zamorakCarrier.Online)
         {
             ZamorakFlag = false;
             ZamorakP = 0;
+            // Clear any lingering reference to allow proper garbage collection
+            zamorakCarrier = null;
         }
         else if (ZamorakP > 0)
         {
@@ -456,10 +462,12 @@ public class GameEngine : BackgroundService
         }
 
         var saradominCarrier = SaradominP > 0 && SaradominP < Players.Length ? Players[SaradominP] : null;
-        if (saradominCarrier == null)
+        if (saradominCarrier == null || !saradominCarrier.Online)
         {
             SaradominFlag = false;
             SaradominP = 0;
+            // Clear any lingering reference to allow proper garbage collection
+            saradominCarrier = null;
         }
         else if (SaradominP > 0)
         {
@@ -652,13 +660,16 @@ public class GameEngine : BackgroundService
                 if (p.AttackPlayer > 0 && p.AttackPlayer < MaxPlayers)
                 {
                     var target = Players[p.AttackPlayer];
-                    if (target != null && !target.IsDead)
+                    // Check target validity and death state before timer execution
+                    if (target != null && !target.IsDead && target.Online)
                     {
                         target.AppendHit(p.ThirdHit, 0);
                         target.AppendHit(p.FourthHit, 0);
                     }
                 }
                 p.UseClaws = false;
+                // Clear attack target after claws finish to prevent state leaks
+                p.AttackPlayer = 0;
             }
         }
 

@@ -196,6 +196,10 @@ public class NPC
             CurrentHP = 0;
             AttackingPlayer = false;
             IsDead = true;
+            // Clear combat state to prevent memory/state leaks
+            AttackPlayer = 0;
+            FollowPlayer = 0;
+            FollowCounter = 0;
         }
 
         if (!Hit1UpdateReq)
@@ -266,14 +270,16 @@ public class NPC
             return;
         }
 
-        if (!player.AttackingNPC && FollowCounter < 4 && Owner is null)
+        if (!player.AttackingNPC && FollowCounter < 4)
         {
             FollowCounter++;
         }
-        else
+        else if (player.AttackingNPC)
         {
+            // Only reset counter when player is actively attacking, not for owned NPCs
             FollowCounter = 0;
         }
+        // Don't reset counter for owned/summoned NPCs unless player is attacking
 
         var playerX = player.AbsX;
         var playerY = player.AbsY;

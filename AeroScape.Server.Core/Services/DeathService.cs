@@ -269,9 +269,13 @@ public sealed class DeathService
         player.graveStone = true;
         player.graveStoneTimer = 200;
         var engine = GetEngine();
-        if (!engine.LoadedObjects.Exists(o => o.ObjectId == 12719 && o.X == player.gsX && o.Y == player.gsY))
+        // Use lock to prevent race condition in gravestone creation
+        lock (engine.LoadedObjects)
         {
-            engine.LoadedObjects.Add(new LoadedObject(12719, player.gsX, player.gsY, 0, 10));
+            if (!engine.LoadedObjects.Exists(o => o.ObjectId == 12719 && o.X == player.gsX && o.Y == player.gsY))
+            {
+                engine.LoadedObjects.Add(new LoadedObject(12719, player.gsX, player.gsY, 0, 10));
+            }
         }
         
         // Send gravestone message like Java implementation
@@ -285,9 +289,11 @@ public sealed class DeathService
 
     private static void CleanupFamiliar(Player player)
     {
-        if (player.follower != null)
+        // Use local reference to prevent race condition with null assignment
+        var follower = player.follower;
+        if (follower != null)
         {
-            player.follower.IsDead = true;
+            follower.IsDead = true;
         }
 
         player.FamiliarType = 0;
