@@ -649,8 +649,8 @@
     },
     {
       "opcode": 129,
-      "size": -3,
-      "name": "Unknown129"
+      "size": 2,
+      "name": "Prayer"
     },
     {
       "opcode": 130,
@@ -779,8 +779,8 @@
     },
     {
       "opcode": 155,
-      "size": -3,
-      "name": "Unknown155"
+      "size": 2,
+      "name": "BountyHunter"
     },
     {
       "opcode": 156,
@@ -1074,8 +1074,8 @@
     },
     {
       "opcode": 214,
-      "size": -3,
-      "name": "Unknown214"
+      "size": 8,
+      "name": "ItemOnNPC"
     },
     {
       "opcode": 215,
