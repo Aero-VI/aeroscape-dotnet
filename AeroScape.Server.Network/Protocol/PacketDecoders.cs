@@ -608,12 +608,16 @@ public sealed class ItemOnObjectDecoder : IPacketDecoder
 
     public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
     {
-        // Java handler reads: readUnsignedWord() → objectId (usedWith), readSignedWordA() → itemId
-        // Remaining bytes are object x/y, slot, interface hash (not read by legacy).
+        // Read all 14 bytes: objectId, itemId, objectX, objectY, slot, interface hash
         var r = new RsReader(payload);
         int objectId = r.ReadUnsignedWord();
         int itemId = r.ReadSignedWordA();
-        return new ItemOnObjectMessage(objectId, itemId);
+        int objectX = r.ReadUnsignedWordBigEndian();
+        int objectY = r.ReadUnsignedWordBigEndianA();
+        // Skip remaining bytes (slot, interface hash) as they're not used in legacy
+        r.ReadSignedWord(); // slot
+        r.ReadUnsignedWord(); // interface hash
+        return new ItemOnObjectMessage(objectId, itemId, objectX, objectY);
     }
 }
 

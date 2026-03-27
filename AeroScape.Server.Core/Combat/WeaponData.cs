@@ -40,11 +40,11 @@ public static class WeaponData
 
     /// <summary>Get the projectile GFX ID for an arrow in flight.</summary>
     public static int GetArrowFlightGfx(int itemId) =>
-        _arrows.TryGetValue(itemId, out var info) ? info.AirGfx : 500;
+        _arrows.TryGetValue(itemId, out var info) ? info.AirGfx : 10; // Bronze arrow as safe fallback
 
     /// <summary>Get the draw-back GFX ID for an arrow.</summary>
     public static int GetArrowDrawGfx(int itemId) =>
-        _arrows.TryGetValue(itemId, out var info) ? info.BackGfx : 500;
+        _arrows.TryGetValue(itemId, out var info) ? info.BackGfx : 19; // Bronze arrow draw as safe fallback
 
     public readonly record struct ArrowInfo(int AirGfx, int BackGfx);
 

@@ -82,9 +82,14 @@ public class MagicOnPlayerMessageHandler : IMessageHandler<MagicOnPlayerMessage>
     private bool TryCastModernSpell(Player player, Player target, int spellId)
     {
         var spell = MagicSpellData.Spells[spellId];
-        if (player.SkillLvl[CombatConstants.SkillMagic] < spell.LevelRequired || !_magic.TryConsumeCombatRunes(player, spell))
+        if (player.SkillLvl[CombatConstants.SkillMagic] < spell.LevelRequired)
             return false;
 
+        // Validate runes first before consuming to ensure consistency
+        if (!_magic.TryConsumeCombatRunes(player, spell))
+            return false;
+
+        // Only proceed with spell effects after successful rune consumption
         int damage = CombatFormulas.MagicDamage(spellId, player.SkillLvl[CombatConstants.SkillMagic], player.EquipmentBonus[CombatConstants.BonusMagicAttack]);
         damage = ApplyMagicProtection(target, damage);
 

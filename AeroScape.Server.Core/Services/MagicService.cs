@@ -171,10 +171,8 @@ public sealed class MagicService(PlayerItemsService playerItems, IClientUiServic
 
     private bool TryAlchemy(Player player, int itemId, int slot, int spellId, int fireRunes, int levelIndex)
     {
-        // Add bounds checking for array access - check each array individually
-        if (levelIndex < 0 || levelIndex >= ModernLevelRequirements.Length)
-            return false;
-        if (levelIndex >= ModernSpellXp.Length)
+        // Consolidated bounds checking for array access
+        if (levelIndex < 0 || levelIndex >= Math.Max(ModernLevelRequirements.Length, ModernSpellXp.Length))
             return false;
             
         if (player.MagicDelay > 0 || player.SkillLvl[6] < ModernLevelRequirements[levelIndex] || !HasRunes(player, (561, 1), (554, fireRunes)))
@@ -193,10 +191,8 @@ public sealed class MagicService(PlayerItemsService playerItems, IClientUiServic
 
     private bool CastBonesSpell(Player player, int outputItemId, int buttonId, int earth, int water, int nature)
     {
-        // Add bounds checking for array access - check each array individually
-        if (buttonId < 0 || buttonId >= ModernLevelRequirements.Length)
-            return false;
-        if (buttonId >= ModernSpellXp.Length)
+        // Consolidated bounds checking for array access
+        if (buttonId < 0 || buttonId >= Math.Max(ModernLevelRequirements.Length, ModernSpellXp.Length))
             return false;
             
         if (player.SkillLvl[6] < ModernLevelRequirements[buttonId] || playerItems.InvItemCount(player, 526) <= 0)
@@ -216,10 +212,8 @@ public sealed class MagicService(PlayerItemsService playerItems, IClientUiServic
 
     private bool CastTeleport(Player player, int buttonId, int x, int y, params (int ItemId, int Amount)[] runes)
     {
-        // Add bounds checking for array access - check each array individually
-        if (buttonId < 0 || buttonId >= ModernLevelRequirements.Length)
-            return false;
-        if (buttonId >= ModernSpellXp.Length)
+        // Consolidated bounds checking for array access
+        if (buttonId < 0 || buttonId >= Math.Max(ModernLevelRequirements.Length, ModernSpellXp.Length))
             return false;
         
         // Now safe to access arrays after bounds check
@@ -297,9 +291,9 @@ public sealed class MagicService(PlayerItemsService playerItems, IClientUiServic
         {
             var coalCount = playerItems.InvItemCount(player, 453);
             // Java: if ((itemID == 440) && hasReq(p, 453, 2)) - requires exactly 2 coal for steel
-            if (coalCount == 2)
+            if (coalCount >= 2)
             {
-                // Return steel bar recipe only if we have exactly 2 coal + 1 iron
+                // Return steel bar recipe if we have at least 2 coal + 1 iron
                 var ironCount = playerItems.InvItemCount(player, 440);
                 if (ironCount >= 1)
                     return GetSuperheatRecipeByBar(2353); // Steel bar
