@@ -14,7 +14,7 @@ using AeroScape.Server.Core.Services;
 using AeroScape.Server.Data;
 using AeroScape.Server.Core.World;
 using AeroScape.Server.Network.Listeners;
-using AeroScape.Server.Network.Frames;
+using AeroScape.Server.Core.Frames;
 using AeroScape.Server.Network.Login;
 using AeroScape.Server.Network.Protocol;
 using AeroScape.Server.Network.Update;
