@@ -30,6 +30,8 @@ public sealed class WalkQueue
         _logger?.LogInformation("HandleWalk called for {Username}: first=({X},{Y}) running={Running}", 
             player.Username, message.FirstX, message.FirstY, message.IsRunning);
         
+        Console.WriteLine($"[WALK] Before reset: ReadPtr={player.WQueueReadPtr}, WritePtr={player.WQueueWritePtr}");
+        
         ClearInteractions(player);
         
         // Restore interface like Java Walking.java:14 and 45-48
@@ -48,9 +50,14 @@ public sealed class WalkQueue
         int firstY = message.FirstY - (player.MapRegionY - 6) * 8;
 
         AddToWalkingQueue(player, firstX, firstY);
+        // PathX/PathY are deltas from the previous position, so we need to accumulate
+        int currentX = firstX;
+        int currentY = firstY;
         for (int i = 0; i < message.PathX.Length; i++)
         {
-            AddToWalkingQueue(player, firstX + message.PathX[i], firstY + message.PathY[i]);
+            currentX += message.PathX[i];
+            currentY += message.PathY[i];
+            AddToWalkingQueue(player, currentX, currentY);
         }
 
         if (player.FaceToReq != 65535)
@@ -62,14 +69,23 @@ public sealed class WalkQueue
         {
             player.LastTickMessage = "You cant move! Your frozen!";
         }
+        
+        Console.WriteLine($"[WALK] After adding steps: ReadPtr={player.WQueueReadPtr}, WritePtr={player.WQueueWritePtr}");
     }
 
     public void Process(Player player)
     {
+        // Reset movement directions at the start of each tick
         player.MapRegionDidChange = false;
         player.DidTeleport = false;
         player.WalkDir = -1;
         player.RunDir = -1;
+        
+        // Debug: Log the queue state each tick if player is moving
+        if (player.WQueueReadPtr != player.WQueueWritePtr)
+        {
+            Console.WriteLine($"[WALK TICK] {player.Username}: ReadPtr={player.WQueueReadPtr}, WritePtr={player.WQueueWritePtr}, Pos=({player.AbsX},{player.AbsY})");
+        }
 
         if (player.TeleportToX != -1 && player.TeleportToY != -1)
         {
@@ -232,6 +248,13 @@ public sealed class WalkQueue
 
         if (dir != -1)
         {
+            // Ensure we don't exceed the queue size
+            if (player.WQueueWritePtr >= player.WalkingQueueSize - 1)
+            {
+                Console.WriteLine($"[WALK] Warning: Walking queue full for {player.Username}");
+                return;
+            }
+            
             player.WalkingQueueX[player.WQueueWritePtr] = x;
             player.WalkingQueueY[player.WQueueWritePtr] = y;
             player.WalkingQueue[player.WQueueWritePtr++] = dir;
@@ -242,6 +265,7 @@ public sealed class WalkQueue
     {
         if (player.WQueueReadPtr == player.WQueueWritePtr)
         {
+            // No more steps in the queue - stop walking
             return -1;
         }
 
@@ -250,6 +274,13 @@ public sealed class WalkQueue
         player.CurrentY += DirectionDeltaY[dir];
         player.AbsX += DirectionDeltaX[dir];
         player.AbsY += DirectionDeltaY[dir];
+        
+        // Log when we reach the end of the queue
+        if (player.WQueueReadPtr == player.WQueueWritePtr)
+        {
+            Console.WriteLine($"[WALK] {player.Username} reached destination at ({player.AbsX}, {player.AbsY})");
+        }
+        
         return dir;
     }
 
