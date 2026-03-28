@@ -1,6 +1,6 @@
 # Minimal AeroScape Server
 
-## Status: ✅ COMPLETE
+## Status: ✅ ACTUALLY COMPLETE (2024-03-28)
 
 Server has been successfully gutted to minimal viable state with only:
 - Login/Logout system
@@ -11,39 +11,47 @@ Server has been successfully gutted to minimal viable state with only:
 - Item system (for logs/axe)
 - Bronze axe (1351) auto-spawn on login
 
-## What Was Disabled
+## What Was ACTUALLY Removed
 
-### Services (commented out in Program.cs)
-- Grand Exchange (not registered)
-- Banking (PlayerBankService)
-- Trading (TradingService)
-- Shops (ShopService - kept for dependencies)
-- Prayer (PrayerService - kept for dependencies) 
-- Death/Combat (DeathService - kept for dependencies)
-- Magic (MagicService)
-- Clan Chat (ClanChatService, persistence, save service)
-- Bounty Hunter (BountyHunterService - kept for dependencies)
-- Construction (ConstructionService)
-- Castle Wars (CastleWarsService)
-- Commands (CommandService - re-enabled for testing)
+### Service Files Converted to Minimal Stubs
+All functionality removed, only empty stub methods remain for GameEngine compatibility:
+- ShopService - Process() does nothing
+- PrayerService - Reset() does nothing  
+- DeathService - All death processing disabled
+- BountyHunterService - Empty stub
+- PlayerBankService - Empty stub
+- TradingService - Empty stub
+- MagicService - Empty stub
+- ClanChatService - Empty stub
+- ConstructionService - Empty stub
+- NPCInteractionService - All NPC interactions disabled
 
-### Packet Handlers (commented out in Program.cs)
-- Player trading/follow options
-- NPC interactions
-- Combat-related packets
-- Magic packets
-- Friends/ignore lists
-- Private messaging
-- Clan packets
-- Construction packets
+### Files Deleted
+- CommandMessageHandler.cs - No commands needed
+- DialogueContinueMessageHandler.cs - No dialogues needed
+- DbGrandExchangeOffer.cs - Grand Exchange model removed
+- Original service implementations all replaced with stubs
 
-### Object Interactions (disabled in ObjectInteractionService.cs)
-- Mining skill
-- Agility skill  
-- Banking objects
-- Prayer altars
-- Magic altars
-- Bounty Hunter entrance
+### Packet Handlers Removed from Program.cs
+- CommandMessageHandler - Removed from DI
+- DialogueContinueMessageHandler - Removed from DI
+- ActionButtonsMessageHandler - Already commented out
+- ItemOnObjectMessage - Already commented out (was for smithing)
+
+### Database Changes
+- DbGrandExchangeOffer table/relations commented out in DbContext
+- GrandExchangeOffers navigation property commented out in DbPlayer
+
+### What Still Works
+- Login/Logout system ✅
+- Walking/Running ✅  
+- Woodcutting skill ONLY ✅
+- Player updating (appearance, equipment) ✅
+- Inventory system ✅
+- Item system (ground items, pickup, drop) ✅
+- Equipment system (for wielding axes) ✅
+- Bronze axe (1351) auto-spawn on login ✅
+- Object interactions (trees for woodcutting) ✅
 
 ## Building & Running
 
