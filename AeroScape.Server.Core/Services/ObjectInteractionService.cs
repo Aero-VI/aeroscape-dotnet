@@ -37,45 +37,49 @@ public sealed class ObjectInteractionService
             return true;
         }
 
-        if (AeroScape.Server.Core.Skills.MiningSkill.FindRock(objectId) is not null)
-        {
-            player.Mining.StartMining(objectId);
-            return true;
-        }
+        // DISABLED - Mining
+        // if (AeroScape.Server.Core.Skills.MiningSkill.FindRock(objectId) is not null)
+        // {
+        //     player.Mining.StartMining(objectId);
+        //     return true;
+        // }
 
-        // Check agility obstacles
-        if (AeroScape.Server.Core.Skills.AgilitySkill.HandleObstacle(player, objectId, x, y))
-        {
-            return true;
-        }
+        // DISABLED - Agility
+        // if (AeroScape.Server.Core.Skills.AgilitySkill.HandleObstacle(player, objectId, x, y))
+        // {
+        //     return true;
+        // }
 
         switch (objectId)
         {
-            case 2213:
-            case 2672:
-            case 280:
-            case 4483:
-            case 25808:
-            case 26972:
-                player.InterfaceId = 762;
-                return true;
-            case 409:
-            case 34616:
-            case 19145:
-            case 26286:
-            case 26288:
-            case 26289:
-                player.SkillLvl[5] = player.GetLevelForXP(5);
-                _prayer.Reset(player);
-                return true;
-            case 6552:
-                player.IsAncients = player.IsAncients == 1 ? 0 : 1;
-                player.IsLunar = 0;
-                return true;
-            case 17010:
-                player.IsLunar = player.IsLunar == 1 ? 0 : 1;
-                player.IsAncients = 0;
-                return true;
+            // DISABLED - Banking
+            // case 2213:
+            // case 2672:
+            // case 280:
+            // case 4483:
+            // case 25808:
+            // case 26972:
+            //     player.InterfaceId = 762;
+            //     return true;
+            // DISABLED - Prayer altars
+            // case 409:
+            // case 34616:
+            // case 19145:
+            // case 26286:
+            // case 26288:
+            // case 26289:
+            //     player.SkillLvl[5] = player.GetLevelForXP(5);
+            //     _prayer.Reset(player);
+            //     return true;
+            // DISABLED - Magic altars
+            // case 6552:
+            //     player.IsAncients = player.IsAncients == 1 ? 0 : 1;
+            //     player.IsLunar = 0;
+            //     return true;
+            // case 17010:
+            //     player.IsLunar = player.IsLunar == 1 ? 0 : 1;
+            //     player.IsAncients = 0;
+            //     return true;
             case 1738:
             case 1740:
                 player.SetCoords(player.AbsX, player.AbsY, player.HeightLevel == 0 ? 1 : 0);
@@ -83,10 +87,11 @@ public sealed class ObjectInteractionService
             case 15482:
                 player.InterfaceId = 399;
                 return true;
-            case 28120:
-            case 28121:
-                _bountyHunter.EnterBounty(player);
-                return true;
+            // DISABLED - Bounty Hunter
+            // case 28120:
+            // case 28121:
+            //     _bountyHunter.EnterBounty(player);
+            //     return true;
             case 23271:
                 player.JumpDelay = 3;
                 return true;

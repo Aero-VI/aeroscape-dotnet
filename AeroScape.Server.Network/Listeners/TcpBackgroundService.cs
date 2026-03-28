@@ -137,6 +137,39 @@ public sealed class TcpBackgroundService : BackgroundService
             _logger.LogInformation("Session {Id}: '{User}' logged in (slot {Slot})",
                 session.SessionId, loginResult.Username, slot);
 
+            // Give bronze axe to new players if they don't have one
+            bool hasAxe = false;
+            for (int i = 0; i < player.Items.Length; i++)
+            {
+                if (player.Items[i] == 1351) // Bronze axe
+                {
+                    hasAxe = true;
+                    break;
+                }
+            }
+            for (int i = 0; i < player.Equipment.Length && !hasAxe; i++)
+            {
+                if (player.Equipment[i] == 1351) // Bronze axe
+                {
+                    hasAxe = true;
+                    break;
+                }
+            }
+            if (!hasAxe)
+            {
+                // Find first empty inventory slot
+                for (int i = 0; i < player.Items.Length; i++)
+                {
+                    if (player.Items[i] == 0)
+                    {
+                        player.Items[i] = 1351; // Bronze axe
+                        player.ItemsN[i] = 1;
+                        _logger.LogInformation("Gave bronze axe to player '{User}'", player.Username);
+                        break;
+                    }
+                }
+            }
+
             // ═══════════════════════════════════════════════════════════════
             // Phase 2: Send post-login initialization frames
             // ═══════════════════════════════════════════════════════════════
