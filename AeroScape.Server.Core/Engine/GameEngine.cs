@@ -724,7 +724,29 @@ public class GameEngine : BackgroundService
 
         // Skilling timers (legacy fields still decremented for compatibility)
         if (p.HerbloreTimer > 0) p.HerbloreTimer--;
-        if (p.AgilityTimer > 0) p.AgilityTimer--;
+        
+        // Agility timer processing
+        if (p.AgilityTimer > 0) 
+        {
+            p.AgilityTimer--;
+            if (p.AgilityTimer == 0)
+            {
+                // Reset movement animations
+                p.NewEmote = 0x338;
+                p.RunEmote = 0x338;
+                p.WalkEmote = 0x333;
+                p.StandEmote = 0x328;
+                p.IsRunning = true;
+                
+                // Award agility XP
+                if (p.AgilityXP > 0)
+                {
+                    p.AddSkillXP(p.AgilityXP * p.SkillLvl[16], 16);
+                    p.AgilityXP = 0;
+                }
+            }
+        }
+        
         if (p.ActionTimer > 0) p.ActionTimer--;
         if (p.FireDelay > 0) p.FireDelay--;
 

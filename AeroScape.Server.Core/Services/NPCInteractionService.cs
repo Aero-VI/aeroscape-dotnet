@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Entities;
+using AeroScape.Server.Core.Items;
 
 namespace AeroScape.Server.Core.Services;
 
@@ -12,6 +13,7 @@ public class NPCInteractionService
     private readonly ShopService _shops;
     private readonly DialogueService _dialogues;
     private readonly IClientUiService _ui;
+    private readonly PlayerItemsService _items;
     
     private GameEngine? _engine;
     private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
@@ -21,13 +23,15 @@ public class NPCInteractionService
         IServiceProvider serviceProvider,
         ShopService shops, 
         DialogueService dialogues, 
-        IClientUiService ui)
+        IClientUiService ui,
+        PlayerItemsService items)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _shops = shops;
         _dialogues = dialogues;
         _ui = ui;
+        _items = items;
     }
 
     /// <summary>
@@ -127,6 +131,12 @@ public class NPCInteractionService
     /// </summary>
     public void HandleNPCOption2(Player player, NPC npc)
     {
+        // Check for thieving targets first
+        if (AeroScape.Server.Core.Skills.ThievingSkill.Pickpocket(player, npc, _ui, _items))
+        {
+            return;
+        }
+
         switch (npc.NpcType)
         {
             case 312:

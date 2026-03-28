@@ -43,6 +43,12 @@ public sealed class ObjectInteractionService
             return true;
         }
 
+        // Check agility obstacles
+        if (AeroScape.Server.Core.Skills.AgilitySkill.HandleObstacle(player, objectId, x, y))
+        {
+            return true;
+        }
+
         switch (objectId)
         {
             case 2213:
