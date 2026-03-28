@@ -66,12 +66,11 @@ public class PublicChatMessageHandler : IMessageHandler<PublicChatMessage>
         //     return Task.CompletedTask;
         // }
 
-        // TODO: Set chat update flags on player entity for the update processor:
-        // player.ChatText = chatText;
-        // player.ChatTextEffects = message.Effects;
-        // player.ChatColor = message.Color;
-        // player.ChatTextUpdateRequired = true;
-        // player.UpdateRequired = true;
+        // Set chat update flags on player entity for the update processor
+        player.ChatText = chatText;
+        player.ChatTextEffects = message.Effects;
+        player.ChatTextUpdateReq = true;
+        player.UpdateReq = true;
 
         _logger.LogDebug("Player {Username} says: {Text}", player.Username, chatText);
 
