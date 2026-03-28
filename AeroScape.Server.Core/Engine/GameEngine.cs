@@ -11,8 +11,8 @@ using Microsoft.Extensions.Logging;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Items;
 using AeroScape.Server.Core.Movement;
-using AeroScape.Server.Core.Services;
 using AeroScape.Server.Core.Messages;
+using AeroScape.Server.Core.Services;
 
 namespace AeroScape.Server.Core.Engine;
 
@@ -72,14 +72,10 @@ public class GameEngine : BackgroundService
     private readonly ILogger<GameEngine> _logger;
     public IGameUpdateService? GameUpdateService { get; set; }
     private readonly WalkQueue _walkQueue;
-    private readonly ShopService _shops;
-    private readonly PrayerService _prayers;
-    private readonly DeathService _deaths;
     private readonly LegacyFileManager _fileManager;
     private readonly NpcSpawnLoader _npcSpawnLoader;
     private readonly ObjectLoaderService _objectLoader;
     private readonly GroundItemManager _groundItems;
-    private readonly NPCInteractionService _npcInteractionService;
     private bool _worldLoaded;
 
     // ── Combat services removed - minimal server ────────────────────────────
@@ -87,26 +83,18 @@ public class GameEngine : BackgroundService
     public GameEngine(
         ILogger<GameEngine> logger,
         WalkQueue walkQueue,
-        ShopService shops,
-        PrayerService prayers,
-        DeathService deaths,
         LegacyFileManager fileManager,
         NpcSpawnLoader npcSpawnLoader,
         ObjectLoaderService objectLoader,
         GroundItemManager groundItems,
-        PlayerItemsService playerItems,
-        NPCInteractionService npcInteractionService)
+        PlayerItemsService playerItems)
     {
         _logger = logger;
         _walkQueue = walkQueue;
-        _shops = shops;
-        _prayers = prayers;
-        _deaths = deaths;
         _fileManager = fileManager;
         _npcSpawnLoader = npcSpawnLoader;
         _objectLoader = objectLoader;
         _groundItems = groundItems;
-        _npcInteractionService = npcInteractionService;
         // Combat removed - minimal server
     }
 
@@ -318,7 +306,6 @@ public class GameEngine : BackgroundService
         // ── 1. Global timers ────────────────────────────────────────────────
         ProcessGlobalTimers();
         _groundItems.Process(Players);
-        _shops.Process(this);
 
         // ── 2. Player per-tick processing & movement ────────────────────────
         for (int i = 1; i < Players.Length; i++)
@@ -625,7 +612,7 @@ public class GameEngine : BackgroundService
             p.UpdateReq = true;
             if (p.SkillLvl[5] <= 0)
             {
-                _prayers.Reset(p);
+                // Prayer reset removed - stub service
                 p.LastTickMessage = "You have run out of prayer points.";
             }
             p.PrayerDrain = 100;
@@ -644,7 +631,9 @@ public class GameEngine : BackgroundService
 
         // Death
         if (p.IsDead)
-            _deaths.ProcessPlayerDeath(p);
+        {
+            // Death processing removed - stub service
+        }
 
         // Magic cast cooldown reset
         if (p.MagicDelay <= 0 && !p.MagicCanCast)
@@ -764,7 +753,7 @@ public class GameEngine : BackgroundService
 
         if (p.AfterDeathUpdateReq)
         {
-            _deaths.RestoreAfterDeath(p);
+            // Death restoration removed - stub service
         }
 
         // Level-up detection
@@ -842,7 +831,7 @@ public class GameEngine : BackgroundService
     /// </summary>
     private void ProcessNpcDeath(NPC n, int index)
     {
-        _deaths.ProcessNpcDeath(n);
+        // Death processing removed - stub service
 
         if (n.HiddenNPC && n.RespawnDelay <= 0)
         {
@@ -942,19 +931,8 @@ public class GameEngine : BackgroundService
         // Simple distance check - player must be adjacent
         if (Math.Max(Math.Abs(player.AbsX - npc.AbsX), Math.Abs(player.AbsY - npc.AbsY)) <= 1)
         {
-            // Player is in range, trigger the deferred action using the interaction service
-            switch (optionNumber)
-            {
-                case 1:
-                    _npcInteractionService.HandleNPCOption1(player, npc);
-                    break;
-                case 2:
-                    _npcInteractionService.HandleNPCOption2(player, npc);
-                    break;
-                case 3:
-                    _npcInteractionService.HandleNPCOption3(player, npc);
-                    break;
-            }
+            // Player is in range, trigger the deferred action
+            // NPC interaction processing removed - stub service
             return true; // Processed, clear the pending option
         }
 

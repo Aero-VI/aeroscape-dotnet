@@ -63,17 +63,7 @@ builder.Services.AddSingleton<ObjectInteractionService>();
 builder.Services.AddSingleton<ObjectLoaderService>();
 builder.Services.AddSingleton<NpcSpawnLoader>();
 
-// MINIMAL STUBS - These services are disabled but GameEngine requires them
-builder.Services.AddSingleton<ShopService>();
-builder.Services.AddSingleton<PrayerService>();
-builder.Services.AddSingleton<DeathService>();
-builder.Services.AddSingleton<BountyHunterService>();
-builder.Services.AddSingleton<PlayerBankService>();
-builder.Services.AddSingleton<TradingService>();
-builder.Services.AddSingleton<MagicService>();
-builder.Services.AddSingleton<ClanChatService>();
-builder.Services.AddSingleton<ConstructionService>();
-builder.Services.AddSingleton<NPCInteractionService>();
+// All stub services removed - GameEngine dependencies fixed
 builder.Services.AddSingleton<GameEngine>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<GameEngine>());
 

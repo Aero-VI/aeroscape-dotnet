@@ -7,19 +7,13 @@ namespace AeroScape.Server.Core.Services;
 public sealed class ObjectInteractionService
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ShopService _shops;
-    private readonly PrayerService _prayer;
-    private readonly BountyHunterService _bountyHunter;
     
     private GameEngine? _engine;
     private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
 
-    public ObjectInteractionService(IServiceProvider serviceProvider, ShopService shops, PrayerService prayer, BountyHunterService bountyHunter)
+    public ObjectInteractionService(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        _shops = shops;
-        _prayer = prayer;
-        _bountyHunter = bountyHunter;
     }
 
     public bool HandleOption1(Player player, int objectId, int x, int y)

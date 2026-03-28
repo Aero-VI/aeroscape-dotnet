@@ -12,13 +12,11 @@ public class ItemOption1MessageHandler : IMessageHandler<ItemOption1Message>
 {
     private readonly ILogger<ItemOption1MessageHandler> _logger;
     private readonly IClientUiService _ui;
-    private readonly ConstructionService _construction;
 
-    public ItemOption1MessageHandler(ILogger<ItemOption1MessageHandler> logger, IClientUiService ui, ConstructionService construction)
+    public ItemOption1MessageHandler(ILogger<ItemOption1MessageHandler> logger, IClientUiService ui)
     {
         _logger = logger;
         _ui = ui;
-        _construction = construction;
     }
     public Task HandleAsync(PlayerSession session, ItemOption1Message message, CancellationToken cancellationToken)
     {
