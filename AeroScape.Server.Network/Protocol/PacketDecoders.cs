@@ -346,88 +346,25 @@ public sealed class PickupItemDecoder : IPacketDecoder
 }
 
 /// <summary>Player option 1: opcode 160.</summary>
-public sealed class PlayerOption1Decoder : IPacketDecoder
-{
-    public Type MessageType => typeof(PlayerOption1Message);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new PlayerOption1Message(r.ReadUnsignedWordBigEndian());
-    }
-}
+// PlayerOption1Decoder removed - minimal server
 
 /// <summary>Player option 2: opcode 37.</summary>
-public sealed class PlayerOption2Decoder : IPacketDecoder
-{
-    public Type MessageType => typeof(PlayerOption2Message);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new PlayerOption2Message(r.ReadUnsignedWord());
-    }
-}
+// PlayerOption2Decoder removed - minimal server
 
 /// <summary>Player option 3: opcode 227.</summary>
-public sealed class PlayerOption3Decoder : IPacketDecoder
-{
-    public Type MessageType => typeof(PlayerOption3Message);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new PlayerOption3Message(r.ReadUnsignedWordBigEndianA());
-    }
-}
+// PlayerOption3Decoder removed - minimal server
 
 /// <summary>NPC attack: opcode 123.</summary>
-public sealed class NPCAttackDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(NPCAttackMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new NPCAttackMessage(r.ReadUnsignedWord());
-    }
-}
+// NPCAttackDecoder removed - minimal server
 
 /// <summary>NPC option 1: opcode 7.</summary>
-public sealed class NPCOption1Decoder : IPacketDecoder
-{
-    public Type MessageType => typeof(NPCOption1Message);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new NPCOption1Message(r.ReadUnsignedWordA());
-    }
-}
+// NPCOption1Decoder removed - minimal server
 
 /// <summary>NPC option 2: opcode 52.</summary>
-public sealed class NPCOption2Decoder : IPacketDecoder
-{
-    public Type MessageType => typeof(NPCOption2Message);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new NPCOption2Message(r.ReadUnsignedWordBigEndianA());
-    }
-}
+// NPCOption2Decoder removed - minimal server
 
 /// <summary>NPC option 3: opcode 199.</summary>
-public sealed class NPCOption3Decoder : IPacketDecoder
-{
-    public Type MessageType => typeof(NPCOption3Message);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new NPCOption3Message(r.ReadUnsignedWordBigEndian());
-    }
-}
+// NPCOption3Decoder removed - minimal server
 
 /// <summary>Object option 1: opcode 158.</summary>
 public sealed class ObjectOption1Decoder : IPacketDecoder
@@ -555,52 +492,13 @@ public sealed class ItemOption1Decoder : IPacketDecoder
 }
 
 /// <summary>Item give: opcode 131.</summary>
-public sealed class ItemGiveDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(ItemGiveMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int targetIndex = r.ReadSignedWordA();
-        int itemId = r.ReadSignedWordBigEndian();
-        return new ItemGiveMessage(targetIndex, itemId);
-    }
-}
+// ItemGiveDecoder removed - minimal server
 
 /// <summary>Item on NPC: opcode 24 (partial — magic on NPC also uses this).</summary>
-public sealed class MagicOnNPCDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(MagicOnNPCMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int npcIndex = r.ReadSignedWordA();
-        int buttonId = r.ReadSignedWordA();
-        int interfaceId = r.ReadUnsignedWord();
-        r.ReadSignedWordA();
-        r.ReadSignedWordA();
-        r.ReadUnsignedWord();
-        return new MagicOnNPCMessage(npcIndex, buttonId, interfaceId);
-    }
-}
+// MagicOnNPCDecoder removed - minimal server
 
 /// <summary>Magic on player: opcode 70.</summary>
-public sealed class MagicOnPlayerDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(MagicOnPlayerMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int targetIndex = r.ReadSignedWordA();
-        int playerId = r.ReadSignedWordBigEndian();
-        int interfaceId = r.ReadUnsignedWord();
-        int buttonId = r.ReadUnsignedWord();
-        return new MagicOnPlayerMessage(targetIndex, playerId, interfaceId, buttonId);
-    }
-}
+// MagicOnPlayerDecoder removed - minimal server
 
 /// <summary>Item on object: opcode 224. 14 bytes in RS 508.</summary>
 public sealed class ItemOnObjectDecoder : IPacketDecoder
@@ -623,20 +521,7 @@ public sealed class ItemOnObjectDecoder : IPacketDecoder
 }
 
 /// <summary>Item on NPC: Uses same opcode region. Separate from magic.</summary>
-public sealed class ItemOnNPCDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(ItemOnNPCMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int itemId = r.ReadUnsignedWordA();
-        r.ReadUnsignedWordA();
-        int npcIndex = r.ReadUnsignedWordA();
-        int interfaceId = r.ReadUnsignedWordA();
-        return new ItemOnNPCMessage(itemId, npcIndex, interfaceId);
-    }
-}
+// ItemOnNPCDecoder removed - minimal server
 
 /// <summary>Item option 2: opcode not directly in packet table but used via ActionButtons.</summary>
 public sealed class ItemOption2Decoder : IPacketDecoder
@@ -659,67 +544,19 @@ public sealed class ItemOption2Decoder : IPacketDecoder
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /// <summary>Add friend: opcode 30 (8 bytes — QWord encoded name).</summary>
-public sealed class AddFriendDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(AddFriendMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new AddFriendMessage(r.ReadQWord());
-    }
-}
+// AddFriendDecoder removed - minimal server
 
 /// <summary>Remove friend: opcode 132 (8 bytes — QWord encoded name).</summary>
-public sealed class RemoveFriendDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(RemoveFriendMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new RemoveFriendMessage(r.ReadQWord());
-    }
-}
+// RemoveFriendDecoder removed - minimal server
 
 /// <summary>Add ignore: opcode 61 (8 bytes — QWord encoded name).</summary>
-public sealed class AddIgnoreDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(AddIgnoreMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new AddIgnoreMessage(r.ReadQWord());
-    }
-}
+// AddIgnoreDecoder removed - minimal server
 
 /// <summary>Remove ignore: opcode 2 (8 bytes — QWord encoded name).</summary>
-public sealed class RemoveIgnoreDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(RemoveIgnoreMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new RemoveIgnoreMessage(r.ReadQWord());
-    }
-}
+// RemoveIgnoreDecoder removed - minimal server
 
 /// <summary>Private message: opcode 178 (variable length).</summary>
-public sealed class PrivateMessageDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(PrivateMessageMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        long targetName = r.ReadQWord();
-        int numChars = r.ReadByte();
-        string text = RsChatCodec.Decompress(payload, 9, numChars);
-        return new PrivateMessageMessage(targetName, text);
-    }
-}
+// PrivateMessageDecoder removed - minimal server
 
 /// <summary>Packets that must be consumed but do not currently map to a gameplay message.</summary>
 public sealed class NoOpDecoder : IPacketDecoder
@@ -729,16 +566,7 @@ public sealed class NoOpDecoder : IPacketDecoder
     public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload) => null;
 }
 
-public sealed class ClanJoinDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(ClanJoinMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new ClanJoinMessage(NameUtil.LongToString(r.ReadQWord()).Replace('_', ' '));
-    }
-}
+// ClanJoinDecoder removed - minimal server
 
 public sealed class StringInputDecoder : IPacketDecoder
 {
@@ -762,54 +590,13 @@ public sealed class LongInputDecoder : IPacketDecoder
     }
 }
 
-public sealed class ClanKickDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(ClanKickMessage);
+// ClanKickDecoder removed - minimal server
 
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new ClanKickMessage(NameUtil.LongToString(r.ReadQWord()).Replace('_', ' '));
-    }
-}
+// ConstructionDecoder removed - minimal server
 
-public sealed class ConstructionDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(ConstructionMessage);
+// PrayerDecoder removed - minimal server
 
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int y = r.ReadUnsignedWordBigEndian();
-        int x = r.ReadUnsignedWordBigEndianA();
-        int objectId = r.ReadUnsignedWordBigEndianA();
-        return new ConstructionMessage(x, y, objectId);
-    }
-}
-
-public sealed class PrayerDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(PrayerMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int buttonId = payload.Length >= 2 ? r.ReadUnsignedWord() : r.ReadByte();
-        return new PrayerMessage(buttonId);
-    }
-}
-
-public sealed class BountyHunterDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(BountyHunterMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int targetId = payload.Length >= 2 ? r.ReadUnsignedWord() : r.ReadByte();
-        return new BountyHunterMessage(targetId);
-    }
-}
+// BountyHunterDecoder removed - minimal server
 
 /// <summary>Idle: opcode 47 (0 bytes).</summary>
 public sealed class IdleDecoder : IPacketDecoder
@@ -851,16 +638,7 @@ public sealed class ItemExamineDecoder : IPacketDecoder
 }
 
 /// <summary>NPC examine: opcode 88 (2 bytes).</summary>
-public sealed class NpcExamineDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(NpcExamineMessage);
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        return new NpcExamineMessage(r.ReadUnsignedWord());
-    }
-}
+// NpcExamineDecoder removed - minimal server
 
 /// <summary>Object examine: opcode 84 (2 bytes).</summary>
 public sealed class ObjectExamineDecoder : IPacketDecoder
@@ -875,29 +653,4 @@ public sealed class ObjectExamineDecoder : IPacketDecoder
 }
 
 /// <summary>Trade accept: opcode 253.</summary>
-public sealed class TradeAcceptDecoder : IPacketDecoder
-{
-    public Type MessageType => typeof(TradeAcceptMessage);
-    
-    // Protocol constants for trade partner ID calculation
-    private const int TRADE_ID_BASE = 33024;
-    private const int TRADE_ID_DIVISOR = 256;
-
-    public object? Decode(PlayerSession session, int opcode, ReadOnlySequence<byte> payload)
-    {
-        var r = new RsReader(payload);
-        int raw = r.ReadUnsignedWord();
-        
-        // Validate raw value to prevent invalid calculations
-        if (raw < TRADE_ID_BASE)
-            return null;
-        
-        int partnerId = (raw - TRADE_ID_BASE) / TRADE_ID_DIVISOR + 1;
-        
-        // Validate calculated partner ID is within reasonable bounds (max player index in RS)
-        if (partnerId < 1 || partnerId > 2047)
-            return null;
-        
-        return new TradeAcceptMessage(partnerId);
-    }
-}
+// TradeAcceptDecoder removed - minimal server

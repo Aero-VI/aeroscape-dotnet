@@ -3,12 +3,25 @@ using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Frames;
 using AeroScape.Server.Core.Util;
 using AeroScape.Server.Core.World;
-using static AeroScape.Server.Core.Combat.CombatConstants;
+// using static AeroScape.Server.Core.Combat.CombatConstants; // Combat removed
 
 namespace AeroScape.Server.Network.Update;
 
 public sealed class PlayerUpdateWriter
 {
+    // Equipment slot constants (from removed CombatConstants)
+    private const int SlotHead = 0;
+    private const int SlotCape = 1;
+    private const int SlotNeck = 2;
+    private const int SlotWeapon = 3;
+    private const int SlotChest = 4;
+    private const int SlotShield = 5;
+    private const int SlotLegs = 7;
+    private const int SlotHands = 9;
+    private const int SlotFeet = 10;
+    private const int SlotRing = 12;
+    private const int SlotArrows = 13;
+    
     private static readonly int[] OtherEmotes = [0x337, 0x334, 0x335, 0x336];
     private readonly MapDataService _mapData;
     private readonly LegacyAppearanceData _appearanceData;

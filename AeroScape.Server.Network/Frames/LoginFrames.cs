@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using AeroScape.Server.Core.Combat;
+// using AeroScape.Server.Core.Combat; // Combat removed
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Frames;
 using AeroScape.Server.Core.Items;
@@ -122,7 +122,7 @@ public static class LoginFrames
         WriteSetString(w, "Member Area", 274, 17);
         WriteSetString(w, "Newest Client", 274, 18);
 
-        p.IsAncients = p.Equipment[CombatConstants.SlotWeapon] == 4675 ? 1 : 0;
+        p.IsAncients = p.Equipment[3] == 4675 ? 1 : 0;
 
         if (!usingHD)
         {
@@ -178,11 +178,11 @@ public static class LoginFrames
 
     private static void WriteWeaponTab(FrameWriter w, Player p, ItemDefinitionLoader items, bool usingHD)
     {
-        string weapon = items.GetItemName(p.Equipment[CombatConstants.SlotWeapon]);
+        string weapon = items.GetItemName(p.Equipment[3]);
         int attackTabId = usingHD ? 87 : 73;
         int childId;
 
-        if (p.Equipment[CombatConstants.SlotWeapon] == -1)
+        if (p.Equipment[3] == -1)
         {
             childId = 92;
             if (p.AttackStyle == 3)

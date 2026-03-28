@@ -11,12 +11,9 @@ namespace AeroScape.Server.Core.Handlers;
 public sealed class LongInputMessageHandler : IMessageHandler<LongInputMessage>
 {
     private readonly ILogger<LongInputMessageHandler> _logger;
-    private readonly ClanChatService _clanChat;
-
-    public LongInputMessageHandler(ILogger<LongInputMessageHandler> logger, ClanChatService clanChat)
+    public LongInputMessageHandler(ILogger<LongInputMessageHandler> logger)
     {
         _logger = logger;
-        _clanChat = clanChat;
     }
 
     public Task HandleAsync(PlayerSession session, LongInputMessage message, CancellationToken cancellationToken)
@@ -25,8 +22,7 @@ public sealed class LongInputMessageHandler : IMessageHandler<LongInputMessage>
             return Task.CompletedTask;
 
         string value = NameUtil.LongToString(message.Value).Replace('_', ' ');
-        if (session.Entity.InputId == 0)
-            _clanChat.CreateOrRenameChat(session.Entity, value);
+        // Clan chat removed - minimal server
 
         _logger.LogInformation("[LongInput] Player {Username} inputId={InputId} value={Value}", session.Entity.Username, session.Entity.InputId, value);
         return Task.CompletedTask;

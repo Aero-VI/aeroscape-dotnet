@@ -1,4 +1,4 @@
-using AeroScape.Server.Core.Combat;
+// using AeroScape.Server.Core.Combat; // Combat removed
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Frames;
 
@@ -95,7 +95,8 @@ public sealed class GroundItemManager(ItemDefinitionLoader itemDefinitions, Game
 
     public GroundItemState? GetPickupCandidate(Player player, int itemId, int itemX, int itemY)
     {
-        if (CombatFormulas.GetDistance(player.AbsX, player.AbsY, itemX, itemY) > 0)
+        // Simple distance check - player must be on same tile
+        if (Math.Abs(player.AbsX - itemX) > 0 || Math.Abs(player.AbsY - itemY) > 0)
         {
             return null;
         }

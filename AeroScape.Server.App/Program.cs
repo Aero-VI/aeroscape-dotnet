@@ -49,34 +49,32 @@ builder.Services.AddDbContext<AeroScapeDbContext>(options =>
     }
 });
 
-// ── Core services ───────────────────────────────────────────────────────────
+// ── Core services (MINIMAL - LOGIN/WALKING/WOODCUTTING ONLY) ───────────────
 builder.Services.AddSingleton<IPlayerSessionManager, PlayerSessionManager>();
 builder.Services.AddSingleton<ItemDefinitionLoader>();
 builder.Services.AddSingleton<InventoryService>();
 builder.Services.AddSingleton<PlayerItemsService>();
 builder.Services.AddSingleton<PlayerEquipmentService>();
-// builder.Services.AddSingleton<PlayerBankService>(); // DISABLED - Banking
-// builder.Services.AddSingleton<TradingService>(); // DISABLED - Trading
 builder.Services.AddSingleton<GroundItemManager>();
 builder.Services.AddSingleton<WalkQueue>();
-builder.Services.AddSingleton<ShopService>(); // Keep for GameEngine dependency
-builder.Services.AddSingleton<PrayerService>(); // Keep for GameEngine dependency
-builder.Services.AddSingleton<DeathService>(); // Keep for GameEngine dependency
 builder.Services.AddSingleton<LegacyFileManager>();
-// builder.Services.AddSingleton<MagicService>(); // DISABLED - Magic
 builder.Services.AddSingleton<IClientUiService, ClientUiService>();
-// builder.Services.AddSingleton<ClanChatService>(); // DISABLED - Clan Chat
-// builder.Services.AddSingleton<IClanChatPersistenceService, ClanChatPersistenceService>(); // DISABLED
-// builder.Services.AddHostedService<ClanChatSaveService>(); // DISABLED
-builder.Services.AddSingleton<BountyHunterService>(); // Keep for ObjectInteractionService dependency
-// builder.Services.AddSingleton<ConstructionService>(); // DISABLED - Construction
-// builder.Services.AddSingleton<CastleWarsService>(); // DISABLED - Castle Wars
 builder.Services.AddSingleton<DialogueService>(); // Keep for basic dialogues
 builder.Services.AddSingleton<ObjectInteractionService>();
 builder.Services.AddSingleton<ObjectLoaderService>();
-builder.Services.AddSingleton<CommandService>(); // Keep for testing
-builder.Services.AddSingleton<NPCInteractionService>();
+builder.Services.AddSingleton<CommandService>(); // Keep minimal for admin testing
 builder.Services.AddSingleton<NpcSpawnLoader>();
+// Dummy services needed by GameEngine and handlers (disabled functionality)
+builder.Services.AddSingleton<ShopService>();
+builder.Services.AddSingleton<PrayerService>();
+builder.Services.AddSingleton<DeathService>();
+builder.Services.AddSingleton<BountyHunterService>();
+builder.Services.AddSingleton<PlayerBankService>();
+builder.Services.AddSingleton<TradingService>();
+builder.Services.AddSingleton<MagicService>();
+builder.Services.AddSingleton<ClanChatService>();
+builder.Services.AddSingleton<ConstructionService>();
+builder.Services.AddSingleton<NPCInteractionService>();
 builder.Services.AddSingleton<GameEngine>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<GameEngine>());
 
@@ -96,24 +94,15 @@ builder.Services.AddHostedService(sp => (PlayerPersistenceService)sp.GetRequired
 builder.Services.AddSingleton<PacketRouter>();
 builder.Services.AddHostedService<TcpBackgroundService>();
 
-// ── Scoped packet handlers ──────────────────────────────────────────────────
-// Each handler is registered as scoped so that IServiceScopeFactory.CreateScope()
-// in PacketRouter resolves a fresh handler per packet.
+// ── Scoped packet handlers (MINIMAL - LOGIN/WALKING/WOODCUTTING ONLY) ───────
 builder.Services.AddScoped<IMessageHandler<WalkMessage>, WalkMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<PublicChatMessage>, PublicChatMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<CommandMessage>, CommandMessageHandler>(); // Keep for testing
-builder.Services.AddScoped<IMessageHandler<ActionButtonsMessage>, ActionButtonsMessageHandler>();
+// builder.Services.AddScoped<IMessageHandler<ActionButtonsMessage>, ActionButtonsMessageHandler>(); // Removed - handles UI for removed features
 builder.Services.AddScoped<IMessageHandler<EquipItemMessage>, EquipItemMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemOperateMessage>, ItemOperateMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<DropItemMessage>, DropItemMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<PickupItemMessage>, PickupItemMessageHandler>();
-// builder.Services.AddScoped<IMessageHandler<PlayerOption1Message>, PlayerOption1MessageHandler>(); // DISABLED - Trading
-// builder.Services.AddScoped<IMessageHandler<PlayerOption2Message>, PlayerOption2MessageHandler>(); // DISABLED - Follow
-// builder.Services.AddScoped<IMessageHandler<PlayerOption3Message>, PlayerOption3MessageHandler>(); // DISABLED - Trade
-// builder.Services.AddScoped<IMessageHandler<NPCAttackMessage>, NPCAttackMessageHandler>(); // DISABLED - Combat
-// builder.Services.AddScoped<IMessageHandler<NPCOption1Message>, NPCOption1MessageHandler>(); // DISABLED - NPCs
-// builder.Services.AddScoped<IMessageHandler<NPCOption2Message>, NPCOption2MessageHandler>(); // DISABLED - NPCs
-// builder.Services.AddScoped<IMessageHandler<NPCOption3Message>, NPCOption3MessageHandler>(); // DISABLED - NPCs
 builder.Services.AddScoped<IMessageHandler<ObjectOption1Message>, ObjectOption1MessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ObjectOption2Message>, ObjectOption2MessageHandler>();
 builder.Services.AddScoped<IMessageHandler<SwitchItemsMessage>, SwitchItemsMessageHandler>();
@@ -121,34 +110,15 @@ builder.Services.AddScoped<IMessageHandler<SwitchItems2Message>, SwitchItems2Mes
 builder.Services.AddScoped<IMessageHandler<ItemOnItemMessage>, ItemOnItemMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemSelectMessage>, ItemSelectMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemOption1Message>, ItemOption1MessageHandler>();
-// builder.Services.AddScoped<IMessageHandler<ItemGiveMessage>, ItemGiveMessageHandler>(); // DISABLED - Trading
-// builder.Services.AddScoped<IMessageHandler<MagicOnNPCMessage>, MagicOnNPCMessageHandler>(); // DISABLED - Magic
-// builder.Services.AddScoped<IMessageHandler<MagicOnPlayerMessage>, MagicOnPlayerMessageHandler>(); // DISABLED - Magic
-builder.Services.AddScoped<IMessageHandler<ItemOnObjectMessage>, ItemOnObjectMessageHandler>();
-// builder.Services.AddScoped<IMessageHandler<ItemOnNPCMessage>, ItemOnNPCMessageHandler>(); // DISABLED - NPCs
-// builder.Services.AddScoped<IMessageHandler<AssaultMessage>, AssaultMessageHandler>(); // DISABLED - Combat
-// builder.Services.AddScoped<IMessageHandler<BountyHunterMessage>, BountyHunterMessageHandler>(); // DISABLED - Bounty Hunter
-// builder.Services.AddScoped<IMessageHandler<PrayerMessage>, PrayerMessageHandler>(); // DISABLED - Prayer
+// builder.Services.AddScoped<IMessageHandler<ItemOnObjectMessage>, ItemOnObjectMessageHandler>(); // Removed - smithing
 builder.Services.AddScoped<IMessageHandler<ItemOption2Message>, ItemOption2MessageHandler>();
-// builder.Services.AddScoped<IMessageHandler<ClanJoinMessage>, ClanJoinMessageHandler>(); // DISABLED - Clans
 builder.Services.AddScoped<IMessageHandler<StringInputMessage>, StringInputMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<LongInputMessage>, LongInputMessageHandler>();
-// builder.Services.AddScoped<IMessageHandler<ClanKickMessage>, ClanKickMessageHandler>(); // DISABLED - Clans
-// builder.Services.AddScoped<IMessageHandler<ConstructionMessage>, ConstructionMessageHandler>(); // DISABLED - Construction
-
-// Inline-handled packet handlers (formerly processed in PacketManager.parsePacket)
-// builder.Services.AddScoped<IMessageHandler<AddFriendMessage>, AddFriendMessageHandler>(); // DISABLED - Friends
-// builder.Services.AddScoped<IMessageHandler<RemoveFriendMessage>, RemoveFriendMessageHandler>(); // DISABLED - Friends
-// builder.Services.AddScoped<IMessageHandler<AddIgnoreMessage>, AddIgnoreMessageHandler>(); // DISABLED - Ignore
-// builder.Services.AddScoped<IMessageHandler<RemoveIgnoreMessage>, RemoveIgnoreMessageHandler>(); // DISABLED - Ignore
-// builder.Services.AddScoped<IMessageHandler<PrivateMessageMessage>, PrivateMessageMessageHandler>(); // DISABLED - PM
 builder.Services.AddScoped<IMessageHandler<IdleMessage>, IdleMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<DialogueContinueMessage>, DialogueContinueMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<CloseInterfaceMessage>, CloseInterfaceMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemExamineMessage>, ItemExamineMessageHandler>();
-// builder.Services.AddScoped<IMessageHandler<NpcExamineMessage>, NpcExamineMessageHandler>(); // DISABLED - NPCs
 builder.Services.AddScoped<IMessageHandler<ObjectExamineMessage>, ObjectExamineMessageHandler>();
-// builder.Services.AddScoped<IMessageHandler<TradeAcceptMessage>, TradeAcceptMessageHandler>(); // DISABLED - Trading
 
 var host = builder.Build();
 
@@ -166,9 +136,5 @@ using (var scope = host.Services.CreateScope())
 var mapDataService = host.Services.GetRequiredService<MapDataService>();
 var mapDataPath = Path.Combine(AppContext.BaseDirectory, "Data", "mapdata", "1.dat");
 mapDataService.LoadRegions(mapDataPath);
-
-// Load clan channels from database
-// var clanPersistence = host.Services.GetRequiredService<IClanChatPersistenceService>(); // DISABLED
-// await clanPersistence.LoadAllChannelsAsync(); // DISABLED
 
 host.Run();

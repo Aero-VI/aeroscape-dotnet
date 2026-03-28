@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using AeroScape.Server.Core.Combat;
+// using AeroScape.Server.Core.Combat; // Combat removed
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Items;
 using AeroScape.Server.Core.Movement;
@@ -82,16 +82,10 @@ public class GameEngine : BackgroundService
     private readonly NPCInteractionService _npcInteractionService;
     private bool _worldLoaded;
 
-    // ── Combat services ─────────────────────────────────────────────────────
-    public PlayerVsPlayerCombat PlayerCombat { get; }
-    public PlayerVsNpcCombat PlayerNpcCombat { get; }
-    public NpcVsPlayerCombat NpcPlayerCombat { get; }
+    // ── Combat services removed - minimal server ────────────────────────────
 
     public GameEngine(
         ILogger<GameEngine> logger,
-        ILogger<PlayerVsPlayerCombat> pvpLogger,
-        ILogger<PlayerVsNpcCombat> pveLogger,
-        ILogger<NpcVsPlayerCombat> npcLogger,
         WalkQueue walkQueue,
         ShopService shops,
         PrayerService prayers,
@@ -113,9 +107,7 @@ public class GameEngine : BackgroundService
         _objectLoader = objectLoader;
         _groundItems = groundItems;
         _npcInteractionService = npcInteractionService;
-        PlayerCombat = new PlayerVsPlayerCombat(this, pvpLogger);
-        PlayerNpcCombat = new PlayerVsNpcCombat(this, pveLogger, playerItems);
-        NpcPlayerCombat = new NpcVsPlayerCombat(this, npcLogger);
+        // Combat removed - minimal server
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -401,10 +393,9 @@ public class GameEngine : BackgroundService
 
             n.Process(Players);
 
-            // NPC-vs-Player combat (mirrors Java: NPC.process() → Engine.npcPlayerCombat.attackPlayer)
-            // Combat should be processed before death state checks to allow final attacks
-            if (n.AttackingPlayer)
-                NpcPlayerCombat.ProcessAttack(n);
+            // NPC-vs-Player combat removed - minimal server
+            // if (n.AttackingPlayer)
+            //     NpcPlayerCombat.ProcessAttack(n);
 
             if (!n.IsDead)
             {
@@ -717,10 +708,11 @@ public class GameEngine : BackgroundService
         // Woodcutting and Mining use their own internal timers via GatheringSkillBase.
         // Fishing, Cooking, and Fletching use the player's timer fields.
         p.Woodcutting?.Process();
-        p.Mining?.Process();
-        p.Fishing?.Process();
-        p.Cooking?.Process();
-        p.Fletching?.Process();
+        // Skills removed - minimal server
+        // p.Mining?.Process();
+        // p.Fishing?.Process();
+        // p.Cooking?.Process();
+        // p.Fletching?.Process();
 
         // Skilling timers (legacy fields still decremented for compatibility)
         if (p.HerbloreTimer > 0) p.HerbloreTimer--;
@@ -763,12 +755,12 @@ public class GameEngine : BackgroundService
             p.Disconnected[1] = true;
         }
 
-        // ── Combat dispatch (mirrors Java Player.process() → Engine.playerCombat / playerNPCCombat) ──
-        if (p.AttackingPlayer)
-            PlayerCombat.ProcessAttack(p);
+        // ── Combat removed - minimal server ──
+        // if (p.AttackingPlayer)
+        //     PlayerCombat.ProcessAttack(p);
 
-        if (p.AttackingNPC)
-            PlayerNpcCombat.ProcessAttack(p);
+        // if (p.AttackingNPC)
+        //     PlayerNpcCombat.ProcessAttack(p);
 
         if (p.AfterDeathUpdateReq)
         {
@@ -947,7 +939,8 @@ public class GameEngine : BackgroundService
             return true; // NPC no longer exists, clear the pending option
 
         // Check if player is adjacent to the NPC
-        if (CombatFormulas.GetDistance(player.AbsX, player.AbsY, npc.AbsX, npc.AbsY) <= 1)
+        // Simple distance check - player must be adjacent
+        if (Math.Max(Math.Abs(player.AbsX - npc.AbsX), Math.Abs(player.AbsY - npc.AbsY)) <= 1)
         {
             // Player is in range, trigger the deferred action using the interaction service
             switch (optionNumber)

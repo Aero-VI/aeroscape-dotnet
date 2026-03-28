@@ -1,4 +1,4 @@
-using AeroScape.Server.Core.Combat;
+// using AeroScape.Server.Core.Combat; // Combat removed
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Items;
 using AeroScape.Server.Core.Util;
@@ -733,7 +733,7 @@ public sealed class GameFrames
             SetTab(w, p, 76, 149);
             SetTab(w, p, 77, 387);
             SetTab(w, p, 78, 271);
-            p.IsAncients = p.Equipment[CombatConstants.SlotWeapon] == 4675 ? 1 : 0;
+            p.IsAncients = p.Equipment[3] == 4675 ? 1 : 0;
             SetInterface(w, 1, 548, 79, p.IsAncients == 1 ? 193 : 192);
             SetTab(w, p, 81, 550);
             SetTab(w, p, 82, 551);
@@ -753,7 +753,7 @@ public sealed class GameFrames
             SetInterface(w, 1, 746, 90, 149);
             SetInterface(w, 1, 746, 91, 387);
             SetInterface(w, 1, 746, 92, 271);
-            p.IsAncients = p.Equipment[CombatConstants.SlotWeapon] == 4675 ? 1 : 0;
+            p.IsAncients = p.Equipment[3] == 4675 ? 1 : 0;
             SetInterface(w, 1, 746, 93, p.IsAncients == 1 ? 193 : 192);
             SetInterface(w, 1, 746, 95, 550);
             SetInterface(w, 1, 746, 96, 551);
@@ -785,7 +785,7 @@ public sealed class GameFrames
 
     public void SetWeaponTab(FrameWriter w, Player p)
     {
-        int weaponId = p.Equipment[CombatConstants.SlotWeapon];
+        int weaponId = p.Equipment[3];
         string weapon = _items.GetItemName(weaponId);
         int attackTabId = p.UsingHd ? 87 : 73;
         int childId;

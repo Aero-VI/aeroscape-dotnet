@@ -375,15 +375,16 @@ public class Player
     // state and tick processing, mirroring the Java pattern where Player had
     // `public Woodcutting wc;` and `public Mining mi;` fields.
     public WoodcuttingSkill Woodcutting { get; private set; } = null!;
-    public MiningSkill Mining { get; private set; } = null!;
-    public FishingSkill Fishing { get; private set; } = null!;
-    public CookingSkill Cooking { get; private set; } = null!;
-    public SmithingSkill Smithing { get; private set; } = null!;
-    public FiremakingSkill Firemaking { get; private set; } = null!;
-    public FletchingSkill Fletching { get; private set; } = null!;
-    public CraftingSkill Crafting { get; private set; } = null!;
-    public HerbloreSkill Herblore { get; private set; } = null!;
-    public RunecraftingSkill Runecrafting { get; private set; } = null!;
+    // Skills removed - minimal server (woodcutting only)
+    // public MiningSkill Mining { get; private set; } = null!;
+    // public FishingSkill Fishing { get; private set; } = null!;
+    // public CookingSkill Cooking { get; private set; } = null!;
+    // public SmithingSkill Smithing { get; private set; } = null!;
+    // public FiremakingSkill Firemaking { get; private set; } = null!;
+    // public FletchingSkill Fletching { get; private set; } = null!;
+    // public CraftingSkill Crafting { get; private set; } = null!;
+    // public HerbloreSkill Herblore { get; private set; } = null!;
+    // public RunecraftingSkill Runecrafting { get; private set; } = null!;
 
     // ── Fishing state (used by FishingSkill's tick processing) ──────────────
     public bool IsFishing { get; set; }
@@ -635,7 +636,7 @@ public class Player
     public bool[] tAccept { get; set; } = Array.Empty<bool>();
     public object? socket { get; set; }
     public WoodcuttingSkill? wc { get; set; }
-    public MiningSkill? mi { get; set; }
+    // public MiningSkill? mi { get; set; } // Mining removed
     public object? frames { get; set; }
     public int posionHit1 { get; set; }
     public int posionHit2 { get; set; }
@@ -704,17 +705,18 @@ public class Player
 
         // Initialise gathering skill instances (mirrors Java: wc = new Woodcutting(this))
         Woodcutting = new WoodcuttingSkill(this);
-        Mining = new MiningSkill(this);
-        Fishing = new FishingSkill(this);
-        Cooking = new CookingSkill(this);
-        Smithing = new SmithingSkill(this);
-        Firemaking = new FiremakingSkill(this);
-        Fletching = new FletchingSkill(this);
-        Crafting = new CraftingSkill(this);
-        Herblore = new HerbloreSkill(this);
-        Runecrafting = new RunecraftingSkill(this);
+        // Skills removed - minimal server
+        // Mining = new MiningSkill(this);
+        // Fishing = new FishingSkill(this);
+        // Cooking = new CookingSkill(this);
+        // Smithing = new SmithingSkill(this);
+        // Firemaking = new FiremakingSkill(this);
+        // Fletching = new FletchingSkill(this);
+        // Crafting = new CraftingSkill(this);
+        // Herblore = new HerbloreSkill(this);
+        // Runecrafting = new RunecraftingSkill(this);
         wc = Woodcutting;
-        mi = Mining;
+        // mi = Mining; // Mining removed
 
         // Default look (male)
         Look[0] = 0;  // Hair

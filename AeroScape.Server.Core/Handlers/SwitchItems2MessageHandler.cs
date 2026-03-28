@@ -11,13 +11,11 @@ namespace AeroScape.Server.Core.Handlers;
 public class SwitchItems2MessageHandler : IMessageHandler<SwitchItems2Message>
 {
     private readonly ILogger<SwitchItems2MessageHandler> _logger;
-    private readonly PlayerBankService _bank;
     private readonly PlayerItemsService _items;
 
-    public SwitchItems2MessageHandler(ILogger<SwitchItems2MessageHandler> logger, PlayerBankService bank, PlayerItemsService items)
+    public SwitchItems2MessageHandler(ILogger<SwitchItems2MessageHandler> logger, PlayerItemsService items)
     {
         _logger = logger;
-        _bank = bank;
         _items = items;
     }
     public Task HandleAsync(PlayerSession session, SwitchItems2Message message, CancellationToken cancellationToken)
@@ -54,7 +52,7 @@ public class SwitchItems2MessageHandler : IMessageHandler<SwitchItems2Message>
         switch (message.TabId)
         {
             case 73: // Swap/insert within bank
-                _bank.HandleBankSwitch(player, message.FromSlot, message.ToSlot);
+                // Banking removed - minimal server
                 break;
 
             // Tab icon drags (move item to specific tab)
@@ -77,7 +75,7 @@ public class SwitchItems2MessageHandler : IMessageHandler<SwitchItems2Message>
             case 57: // Tab 7
             case 58: // Tab 8
             case 59: // Tab 9
-                _bank.MoveToBankTab(player, message.FromSlot, message.TabId);
+                // Banking removed - minimal server
                 break;
         }
     }

@@ -51,13 +51,13 @@ public sealed class PacketRouter
         Reg(new ItemOperateDecoder(),     186);
         Reg(new DropItemDecoder(),        211);
         Reg(new PickupItemDecoder(),      201);
-        Reg(new PlayerOption1Decoder(),   160);
-        Reg(new PlayerOption2Decoder(),   37);
-        Reg(new PlayerOption3Decoder(),   227);
-        Reg(new NPCAttackDecoder(),       123);
-        Reg(new NPCOption1Decoder(),      7);
-        Reg(new NPCOption2Decoder(),      52);
-        Reg(new NPCOption3Decoder(),      199);
+        // //         Reg(new PlayerOption1Decoder(),   160); // Removed - minimal server
+        // //         Reg(new PlayerOption2Decoder(),   37); // Removed - minimal server
+        // //         Reg(new PlayerOption3Decoder(),   227); // Removed - minimal server
+        // //         Reg(new NPCAttackDecoder(),       123); // Removed - minimal server
+        // //         Reg(new NPCOption1Decoder(),      7); // Removed - minimal server
+        // //         Reg(new NPCOption2Decoder(),      52); // Removed - minimal server
+        // //         Reg(new NPCOption3Decoder(),      199); // Removed - minimal server
         Reg(new ObjectOption1Decoder(),   158);
         Reg(new ObjectOption2Decoder(),   228);
         Reg(new SwitchItemsDecoder(),     167);
@@ -65,39 +65,39 @@ public sealed class PacketRouter
         Reg(new ItemOnItemDecoder(),      40);
         Reg(new ItemSelectDecoder(),      220, 134);
         Reg(new ItemOption1Decoder(),     203, 152);
-        Reg(new ItemGiveDecoder(),        131);
-        Reg(new MagicOnNPCDecoder(),      24);
-        Reg(new MagicOnPlayerDecoder(),   70);
+        // //         Reg(new ItemGiveDecoder(),        131); // Removed - minimal server
+        // //         Reg(new MagicOnNPCDecoder(),      24); // Removed - minimal server
+        // //         Reg(new MagicOnPlayerDecoder(),   70); // Removed - minimal server
         Reg(new ItemOnObjectDecoder(),    224);
 
         // Inline-handled packets (formerly in PacketManager.parsePacket directly)
-        Reg(new AddFriendDecoder(),       30);
-        Reg(new RemoveFriendDecoder(),    132);
-        Reg(new AddIgnoreDecoder(),       61);
-        Reg(new RemoveIgnoreDecoder(),    2);
-        Reg(new PrivateMessageDecoder(),  178);
+        // //         Reg(new AddFriendDecoder(),       30); // Removed - minimal server
+        // //         Reg(new RemoveFriendDecoder(),    132); // Removed - minimal server
+        // //         Reg(new AddIgnoreDecoder(),       61); // Removed - minimal server
+        // //         Reg(new RemoveIgnoreDecoder(),    2); // Removed - minimal server
+        // Reg(new PrivateMessageDecoder(),  178); // Removed - minimal server
         Reg(new IdleDecoder(),            47);
         Reg(new DialogueContinueDecoder(),63);
         Reg(new CloseInterfaceDecoder(),  108);
         Reg(new ItemExamineDecoder(),     38);
-        Reg(new NpcExamineDecoder(),      88);
+        // Reg(new NpcExamineDecoder(),      88); // Removed - minimal server
         Reg(new ObjectExamineDecoder(),   84);
-        Reg(new TradeAcceptDecoder(),     253);
+        // Reg(new TradeAcceptDecoder(),     253); // Removed - minimal server
 
         // Legacy PacketManager paths.
-        Reg(new ClanJoinDecoder(),        42);
+        // Reg(new ClanJoinDecoder(),        42); // Removed - minimal server
         Reg(new StringInputDecoder(),     127);
         // 117, 247, 248 are skillcape-trim/no-op packets in Java PacketManager
         Reg(new NoOpDecoder(),            117, 247, 248);
         Reg(new LongInputDecoder(),       189);
-        Reg(new ConstructionDecoder(),    190);
-        Reg(new ClanKickDecoder(),        200);
+        // Reg(new ConstructionDecoder(),    190); // Removed - minimal server
+        // Reg(new ClanKickDecoder(),        200); // Removed - minimal server
         Reg(new NoOpDecoder(),            43, 62, 99);
 
         // Missing packet decoder registrations (fixed from audit round 12-5)
-        Reg(new PrayerDecoder(),          129);
-        Reg(new BountyHunterDecoder(),    155);
-        Reg(new ItemOnNPCDecoder(),       214);
+        // Reg(new PrayerDecoder(),          129); // Removed - minimal server
+        // Reg(new BountyHunterDecoder(),    155); // Removed - minimal server
+        // Reg(new ItemOnNPCDecoder(),       214); // Removed - minimal server
     }
 
     /// <summary>
