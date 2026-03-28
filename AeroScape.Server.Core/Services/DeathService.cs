@@ -3,6 +3,7 @@ using System.IO;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Engine;
 using AeroScape.Server.Core.Items;
+using AeroScape.Server.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AeroScape.Server.Core.Services;
@@ -67,6 +68,16 @@ public sealed class DeathService
 
         if (!npc.HiddenNPC && npc.CombatDelay <= 0)
         {
+            // Process slayer kill if player killed this NPC
+            if (npc.AttackPlayer > 0)
+            {
+                var killer = GetEngine().Players[npc.AttackPlayer];
+                if (killer != null)
+                {
+                    Skills.SlayerSkill.ProcessKill(killer, npc.NpcType, _serviceProvider.GetRequiredService<IClientUiService>());
+                }
+            }
+            
             npc.NpcCanLoot = true;
             DropNpcLoot(npc);
             npc.HiddenNPC = true;

@@ -347,15 +347,8 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
                 }
                 else
                 {
-                    // Assign slayer task
-                    var random = new Random();
-                    var taskType = random.Next(5);
-                    var taskAmount = 1 + random.Next(50);
-                    
-                    string[] taskNames = {"Dragons", "Guards", "Giants", "Ghosts", "Heroes"};
-                    var taskName = taskNames[taskType];
-                    
-                    _ui.ShowNpcDialogue(player, 1599, "Duradel", $"You must slay {taskAmount} {taskName}.");
+                    // Assign new slayer task
+                    Skills.SlayerSkill.AssignTask(player, _ui);
                 }
                 break;
 
@@ -392,6 +385,12 @@ public class ActionButtonsMessageHandler : IMessageHandler<ActionButtonsMessage>
                 else if (player.SmithingTimer > 0)
                 {
                     player.SmithingAmount = 28;
+                }
+                else
+                {
+                    // Teleport to dragon dungeon (slayer option 3)
+                    player.SetCoords(2710, 9466, 0);
+                    _ui.SendMessage(player, "You have been teleported to the Dragon Dungeon.");
                 }
                 break;
         }

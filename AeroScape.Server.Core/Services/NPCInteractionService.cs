@@ -121,6 +121,11 @@ public class NPCInteractionService
                 else
                     _dialogues.Start(player, 111);
                 break;
+            case 1599: // Duradel - Slayer master
+                player.TalkAgent = false;
+                player.DecorChange = false;
+                _ui.ShowOptionDialogue(player, "Slayer Cape", "New Slayer Task", "Teleport to Dragon Dungeon");
+                break;
         }
 
         _logger.LogInformation("[NPCOption1] Player {Username} npcType={NpcType}", player.Username, npc.NpcType);
