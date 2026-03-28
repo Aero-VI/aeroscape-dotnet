@@ -14,7 +14,7 @@ public class AeroScapeDbContext : DbContext
     public DbSet<DbBankItem> BankItems => Set<DbBankItem>();
     public DbSet<DbEquipment> Equipment => Set<DbEquipment>();
     public DbSet<DbFriend> Friends => Set<DbFriend>();
-    public DbSet<DbGrandExchangeOffer> GrandExchangeOffers => Set<DbGrandExchangeOffer>();
+    // public DbSet<DbGrandExchangeOffer> GrandExchangeOffers => Set<DbGrandExchangeOffer>(); // REMOVED - Grand Exchange disabled
     public DbSet<DbClanChannel> ClanChannels => Set<DbClanChannel>();
     public DbSet<DbClanRank> ClanRanks => Set<DbClanRank>();
 
@@ -79,14 +79,15 @@ public class AeroScapeDbContext : DbContext
         });
 
         // Grand Exchange offers
-        modelBuilder.Entity<DbGrandExchangeOffer>(entity =>
-        {
-            entity.HasIndex(g => new { g.PlayerId, g.Slot }).IsUnique();
-            entity.HasOne(g => g.Player)
-                  .WithMany(p => p.GrandExchangeOffers)
-                  .HasForeignKey(g => g.PlayerId)
-                  .OnDelete(DeleteBehavior.Cascade);
-        });
+        // REMOVED - Grand Exchange disabled
+        // modelBuilder.Entity<DbGrandExchangeOffer>(entity =>
+        // {
+        //     entity.HasIndex(g => new { g.PlayerId, g.Slot }).IsUnique();
+        //     entity.HasOne(g => g.Player)
+        //           .WithMany(p => p.GrandExchangeOffers)
+        //           .HasForeignKey(g => g.PlayerId)
+        //           .OnDelete(DeleteBehavior.Cascade);
+        // });
 
         // Clan Channels — unique owner
         modelBuilder.Entity<DbClanChannel>(entity =>

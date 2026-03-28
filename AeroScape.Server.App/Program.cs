@@ -59,12 +59,11 @@ builder.Services.AddSingleton<GroundItemManager>();
 builder.Services.AddSingleton<WalkQueue>();
 builder.Services.AddSingleton<LegacyFileManager>();
 builder.Services.AddSingleton<IClientUiService, ClientUiService>();
-builder.Services.AddSingleton<DialogueService>(); // Keep for basic dialogues
 builder.Services.AddSingleton<ObjectInteractionService>();
 builder.Services.AddSingleton<ObjectLoaderService>();
-builder.Services.AddSingleton<CommandService>(); // Keep minimal for admin testing
 builder.Services.AddSingleton<NpcSpawnLoader>();
-// Dummy services needed by GameEngine and handlers (disabled functionality)
+
+// MINIMAL STUBS - These services are disabled but GameEngine requires them
 builder.Services.AddSingleton<ShopService>();
 builder.Services.AddSingleton<PrayerService>();
 builder.Services.AddSingleton<DeathService>();
@@ -97,7 +96,7 @@ builder.Services.AddHostedService<TcpBackgroundService>();
 // ── Scoped packet handlers (MINIMAL - LOGIN/WALKING/WOODCUTTING ONLY) ───────
 builder.Services.AddScoped<IMessageHandler<WalkMessage>, WalkMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<PublicChatMessage>, PublicChatMessageHandler>();
-builder.Services.AddScoped<IMessageHandler<CommandMessage>, CommandMessageHandler>(); // Keep for testing
+// builder.Services.AddScoped<IMessageHandler<CommandMessage>, CommandMessageHandler>(); // Removed - not needed
 // builder.Services.AddScoped<IMessageHandler<ActionButtonsMessage>, ActionButtonsMessageHandler>(); // Removed - handles UI for removed features
 builder.Services.AddScoped<IMessageHandler<EquipItemMessage>, EquipItemMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemOperateMessage>, ItemOperateMessageHandler>();
@@ -115,7 +114,7 @@ builder.Services.AddScoped<IMessageHandler<ItemOption2Message>, ItemOption2Messa
 builder.Services.AddScoped<IMessageHandler<StringInputMessage>, StringInputMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<LongInputMessage>, LongInputMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<IdleMessage>, IdleMessageHandler>();
-builder.Services.AddScoped<IMessageHandler<DialogueContinueMessage>, DialogueContinueMessageHandler>();
+// builder.Services.AddScoped<IMessageHandler<DialogueContinueMessage>, DialogueContinueMessageHandler>(); // Removed - no dialogues
 builder.Services.AddScoped<IMessageHandler<CloseInterfaceMessage>, CloseInterfaceMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ItemExamineMessage>, ItemExamineMessageHandler>();
 builder.Services.AddScoped<IMessageHandler<ObjectExamineMessage>, ObjectExamineMessageHandler>();

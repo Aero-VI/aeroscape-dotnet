@@ -1,8 +1,6 @@
 namespace AeroScape.Server.Core.Items;
 
-/// <summary>
-/// Minimal dummy implementation - trading disabled
-/// </summary>
+// MINIMAL STUB - trading disabled
 public class TradingService
 {
 }

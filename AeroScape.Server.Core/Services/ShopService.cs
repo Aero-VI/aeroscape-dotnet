@@ -2,9 +2,7 @@ using AeroScape.Server.Core.Engine;
 
 namespace AeroScape.Server.Core.Services;
 
-/// <summary>
-/// Minimal dummy implementation - shops disabled
-/// </summary>
+// MINIMAL STUB - shops disabled
 public class ShopService
 {
     public void Process(GameEngine engine) { }

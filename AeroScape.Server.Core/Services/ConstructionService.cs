@@ -1,8 +1,6 @@
 namespace AeroScape.Server.Core.Services;
 
-/// <summary>
-/// Minimal dummy implementation - construction disabled
-/// </summary>
+// MINIMAL STUB - construction disabled
 public class ConstructionService
 {
 }

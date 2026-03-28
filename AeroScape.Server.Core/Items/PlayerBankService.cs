@@ -1,8 +1,6 @@
 namespace AeroScape.Server.Core.Items;
 
-/// <summary>
-/// Minimal dummy implementation - banking disabled
-/// </summary>
+// MINIMAL STUB - banking disabled
 public class PlayerBankService
 {
 }

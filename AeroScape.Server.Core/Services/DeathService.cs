@@ -2,9 +2,7 @@ using AeroScape.Server.Core.Entities;
 
 namespace AeroScape.Server.Core.Services;
 
-/// <summary>
-/// Minimal dummy implementation - death disabled
-/// </summary>
+// MINIMAL STUB - death/combat disabled
 public class DeathService
 {
     public void ProcessPlayerDeath(Player p) { }

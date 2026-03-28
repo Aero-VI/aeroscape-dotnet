@@ -94,5 +94,5 @@ public class DbPlayer
     public ICollection<DbBankItem> BankItems { get; set; } = new List<DbBankItem>();
     public ICollection<DbEquipment> Equipment { get; set; } = new List<DbEquipment>();
     public ICollection<DbFriend> Friends { get; set; } = new List<DbFriend>();
-    public ICollection<DbGrandExchangeOffer> GrandExchangeOffers { get; set; } = new List<DbGrandExchangeOffer>();
+    // public ICollection<DbGrandExchangeOffer> GrandExchangeOffers { get; set; } = new List<DbGrandExchangeOffer>(); // REMOVED - Grand Exchange disabled
 }

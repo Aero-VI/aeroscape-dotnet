@@ -2,9 +2,7 @@ using AeroScape.Server.Core.Entities;
 
 namespace AeroScape.Server.Core.Services;
 
-/// <summary>
-/// Minimal dummy implementation - prayers disabled
-/// </summary>
+// MINIMAL STUB - prayers disabled
 public class PrayerService
 {
     public void Reset(Player p) { }

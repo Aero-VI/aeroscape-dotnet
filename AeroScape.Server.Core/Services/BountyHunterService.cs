@@ -1,8 +1,6 @@
 namespace AeroScape.Server.Core.Services;
 
-/// <summary>
-/// Minimal dummy implementation - bounty hunter disabled
-/// </summary>
+// MINIMAL STUB - Bounty Hunter disabled
 public class BountyHunterService
 {
 }

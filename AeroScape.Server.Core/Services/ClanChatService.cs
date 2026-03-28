@@ -1,8 +1,6 @@
 namespace AeroScape.Server.Core.Services;
 
-/// <summary>
-/// Minimal dummy implementation - clan chat disabled
-/// </summary>
+// MINIMAL STUB - clan chat disabled
 public class ClanChatService
 {
 }
