@@ -4,6 +4,7 @@
     <ProjectReference Include="..\AeroScape.Server.Core\AeroScape.Server.Core.csproj" />
     <ProjectReference Include="..\AeroScape.Server.Network\AeroScape.Server.Network.csproj" />
     <ProjectReference Include="..\AeroScape.Server.Data\AeroScape.Server.Data.csproj" />
+    <ProjectReference Include="..\AeroScape.Server.PluginHost\AeroScape.Server.PluginHost.csproj" />
   </ItemGroup>
 
   <ItemGroup>

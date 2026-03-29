@@ -7,12 +7,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 // using AeroScape.Server.Core.Combat; // Combat removed
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Items;
 using AeroScape.Server.Core.Movement;
 using AeroScape.Server.Core.Messages;
 using AeroScape.Server.Core.Services;
+using AeroScape.Server.API.Events;
+using AeroScape.Server.API.Models;
+using AeroScape.Server.PluginHost;
 
 namespace AeroScape.Server.Core.Engine;
 
@@ -76,6 +80,9 @@ public class GameEngine : BackgroundService
     private readonly NpcSpawnLoader _npcSpawnLoader;
     private readonly ObjectLoaderService _objectLoader;
     private readonly GroundItemManager _groundItems;
+    private readonly IServiceProvider _serviceProvider;
+    private PluginManager? _pluginManager;
+    private PluginManager? PluginManager => _pluginManager ??= _serviceProvider.GetService<PluginManager>();
     private bool _worldLoaded;
 
     // ── Combat services removed - minimal server ────────────────────────────
@@ -87,7 +94,8 @@ public class GameEngine : BackgroundService
         NpcSpawnLoader npcSpawnLoader,
         ObjectLoaderService objectLoader,
         GroundItemManager groundItems,
-        PlayerItemsService playerItems)
+        PlayerItemsService playerItems,
+        IServiceProvider serviceProvider)
     {
         _logger = logger;
         _walkQueue = walkQueue;
@@ -95,6 +103,7 @@ public class GameEngine : BackgroundService
         _npcSpawnLoader = npcSpawnLoader;
         _objectLoader = objectLoader;
         _groundItems = groundItems;
+        _serviceProvider = serviceProvider;
         // Combat removed - minimal server
     }
 
@@ -152,6 +161,22 @@ public class GameEngine : BackgroundService
         }
     }
 
+    /// <summary>
+    /// Get all online players (convenience method for API).
+    /// </summary>
+    public IEnumerable<Player> OnlinePlayers
+    {
+        get
+        {
+            for (int i = 1; i < Players.Length; i++)
+            {
+                var p = Players[i];
+                if (p != null && p.Online)
+                    yield return p;
+            }
+        }
+    }
+    
     /// <summary>
     /// Get the online player count.
     /// </summary>
@@ -256,6 +281,26 @@ public class GameEngine : BackgroundService
     /// <summary>Check if coordinates are in the Castle Wars area.</summary>
     public static bool CastleWarsArea(int absX, int absY)
         => absX >= 2368 && absX <= 2428 && absY >= 3072 && absY <= 3132;
+        
+    private static PlayerInfo MapToPlayerInfo(Player player)
+    {
+        return new PlayerInfo
+        {
+            Id = player.PlayerId,
+            Username = player.Username,
+            CombatLevel = player.CombatLevel,
+            Location = new LocationInfo
+            {
+                X = player.AbsX,
+                Y = player.AbsY,
+                HeightLevel = player.HeightLevel
+            },
+            CurrentHitpoints = player.SkillLvl[3], // HP skill ID
+            MaxHitpoints = player.GetLevelForXP(3),
+            InCombat = false,
+            AnimationId = player.AnimReq
+        };
+    }
 
     // ══════════════════════════════════════════════════════════════════════════
     //  Main game loop
@@ -692,11 +737,20 @@ public class GameEngine : BackgroundService
             }
         }
 
+        // ── Fire plugin event for player tick ──────────────────────────────
+        if (PluginManager != null)
+        {
+            var playerInfo = MapToPlayerInfo(p);
+            var tickEvent = new PlayerTickEventArgs { Player = playerInfo };
+            PluginManager.GlobalEventManager.FireEvent(this, tickEvent);
+        }
+        
         // ── Gathering skill processing ─────────────────────────────────────
         // These tick-driven skills were processed in Player.process() in the Java code.
         // Woodcutting and Mining use their own internal timers via GatheringSkillBase.
         // Fishing, Cooking, and Fletching use the player's timer fields.
-        p.Woodcutting?.Process();
+        // REMOVED - Now handled by woodcutting plugin
+        // p.Woodcutting?.Process();
         // Skills removed - minimal server
         // p.Mining?.Process();
         // p.Fishing?.Process();

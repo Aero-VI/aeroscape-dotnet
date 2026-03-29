@@ -374,7 +374,8 @@ public class Player
     // These are created lazily / during init. Each skill encapsulates its own
     // state and tick processing, mirroring the Java pattern where Player had
     // `public Woodcutting wc;` and `public Mining mi;` fields.
-    public WoodcuttingSkill Woodcutting { get; private set; } = null!;
+    // REMOVED - Now handled by plugin system
+    // public WoodcuttingSkill Woodcutting { get; private set; } = null!;
     // Skills removed - minimal server (woodcutting only)
     // public MiningSkill Mining { get; private set; } = null!;
     // public FishingSkill Fishing { get; private set; } = null!;
@@ -635,7 +636,8 @@ public class Player
     public int[] ShopItemsA { get; set; } = Array.Empty<int>();
     public bool[] tAccept { get; set; } = Array.Empty<bool>();
     public object? socket { get; set; }
-    public WoodcuttingSkill? wc { get; set; }
+    // REMOVED - Now handled by plugin system
+    // public WoodcuttingSkill? wc { get; set; }
     // public MiningSkill? mi { get; set; } // Mining removed
     public object? frames { get; set; }
     public int posionHit1 { get; set; }
@@ -704,7 +706,8 @@ public class Player
         WalkingQueue = new int[WalkingQueueSize];
 
         // Initialise gathering skill instances (mirrors Java: wc = new Woodcutting(this))
-        Woodcutting = new WoodcuttingSkill(this);
+        // REMOVED - Now handled by plugin system
+        // Woodcutting = new WoodcuttingSkill(this);
         // Skills removed - minimal server
         // Mining = new MiningSkill(this);
         // Fishing = new FishingSkill(this);
@@ -715,7 +718,8 @@ public class Player
         // Crafting = new CraftingSkill(this);
         // Herblore = new HerbloreSkill(this);
         // Runecrafting = new RunecraftingSkill(this);
-        wc = Woodcutting;
+        // REMOVED - Now handled by plugin system
+        // wc = Woodcutting;
         // mi = Mining; // Mining removed
 
         // Default look (male)

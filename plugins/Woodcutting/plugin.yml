@@ -1,0 +1,7 @@
+name: Woodcutting
+main: AeroScape.Plugin.Woodcutting.WoodcuttingPlugin
+version: 1.0.0
+author: AeroScape Team
+description: Woodcutting skill implementation
+dependencies: []
+api-version: 1.0

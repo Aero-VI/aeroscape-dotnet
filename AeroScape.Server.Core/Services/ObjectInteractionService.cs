@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using AeroScape.Server.Core.Entities;
 using AeroScape.Server.Core.Engine;
+using AeroScape.Server.API.Events;
+using AeroScape.Server.API.Models;
+using AeroScape.Server.PluginHost;
 
 namespace AeroScape.Server.Core.Services;
 
@@ -10,6 +13,9 @@ public sealed class ObjectInteractionService
     
     private GameEngine? _engine;
     private GameEngine Engine => _engine ??= _serviceProvider.GetRequiredService<GameEngine>();
+    
+    private PluginManager? _pluginManager;
+    private PluginManager? PluginManager => _pluginManager ??= _serviceProvider.GetService<PluginManager>();
 
     public ObjectInteractionService(IServiceProvider serviceProvider)
     {
@@ -25,11 +31,31 @@ public sealed class ObjectInteractionService
         if (!HasObjectAt(objectId, x, y))
             return false;
 
-        if (AeroScape.Server.Core.Skills.WoodcuttingSkill.FindTree(objectId) is not null)
+        // Fire plugin event for object interaction
+        if (PluginManager != null)
         {
-            player.Woodcutting.StartCutting(objectId);
-            return true;
+            var playerInfo = MapToPlayerInfo(player);
+            var location = new LocationInfo { X = x, Y = y, HeightLevel = player.HeightLevel };
+            var eventArgs = new PlayerInteractObjectEventArgs
+            {
+                Player = playerInfo,
+                ObjectId = objectId,
+                Location = location,
+                Option = 1
+            };
+            
+            PluginManager.GlobalEventManager.FireEvent(this, eventArgs);
+            
+            if (eventArgs.IsCancelled)
+                return true;
         }
+
+        // Remove direct woodcutting handling - now handled by plugin
+        // if (AeroScape.Server.Core.Skills.WoodcuttingSkill.FindTree(objectId) is not null)
+        // {
+        //     player.Woodcutting.StartCutting(objectId);
+        //     return true;
+        // }
 
         // DISABLED - Mining
         // if (AeroScape.Server.Core.Skills.MiningSkill.FindRock(objectId) is not null)
@@ -117,5 +143,25 @@ public sealed class ObjectInteractionService
         }
 
         return false;
+    }
+    
+    private static PlayerInfo MapToPlayerInfo(Player player)
+    {
+        return new PlayerInfo
+        {
+            Id = player.PlayerId,
+            Username = player.Username,
+            CombatLevel = player.CombatLevel,
+            Location = new LocationInfo
+            {
+                X = player.AbsX,
+                Y = player.AbsY,
+                HeightLevel = player.HeightLevel
+            },
+            CurrentHitpoints = player.SkillLvl[3], // HP skill ID
+            MaxHitpoints = player.GetLevelForXP(3),
+            InCombat = false,
+            AnimationId = player.AnimReq
+        };
     }
 }

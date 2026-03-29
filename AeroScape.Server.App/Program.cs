@@ -11,6 +11,7 @@ using AeroScape.Server.Core.Messages;
 using AeroScape.Server.Core.Movement;
 using AeroScape.Server.Core.Session;
 using AeroScape.Server.Core.Services;
+using AeroScape.Server.Core.Api;
 using AeroScape.Server.Data;
 using AeroScape.Server.Core.World;
 using AeroScape.Server.Network.Listeners;
@@ -18,6 +19,8 @@ using AeroScape.Server.Core.Frames;
 using AeroScape.Server.Network.Login;
 using AeroScape.Server.Network.Protocol;
 using AeroScape.Server.Network.Update;
+using AeroScape.Server.API;
+using AeroScape.Server.PluginHost;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -66,6 +69,24 @@ builder.Services.AddSingleton<NpcSpawnLoader>();
 // All stub services removed - GameEngine dependencies fixed
 builder.Services.AddSingleton<GameEngine>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<GameEngine>());
+
+// ── Plugin system ───────────────────────────────────────────────────────────
+builder.Services.AddSingleton<PluginLoader>();
+builder.Services.AddSingleton<PluginManager>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<PluginManager>>();
+    var pluginLoader = sp.GetRequiredService<PluginLoader>();
+    var pluginsDir = Path.Combine(AppContext.BaseDirectory, "plugins");
+    return new PluginManager(logger, sp, pluginLoader, pluginsDir);
+});
+
+// Plugin API implementations
+builder.Services.AddSingleton<IPlayerAPI, PlayerAPIImpl>();
+builder.Services.AddSingleton<ISkillAPI, SkillAPIImpl>();
+builder.Services.AddSingleton<IInventoryAPI, InventoryAPIImpl>();
+builder.Services.AddSingleton<IItemAPI, ItemAPIImpl>();
+builder.Services.AddSingleton<IWorldAPI, WorldAPIImpl>();
+builder.Services.AddSingleton<IPacketAPI, PacketAPIImpl>();
 
 // ── Map data service ─────────────────────────────────────────────────────────
 builder.Services.AddSingleton<MapDataService>();
@@ -125,5 +146,16 @@ using (var scope = host.Services.CreateScope())
 var mapDataService = host.Services.GetRequiredService<MapDataService>();
 var mapDataPath = Path.Combine(AppContext.BaseDirectory, "Data", "mapdata", "1.dat");
 mapDataService.LoadRegions(mapDataPath);
+
+// Initialize plugin system
+var pluginManager = host.Services.GetRequiredService<PluginManager>();
+await pluginManager.InitializeAsync();
+
+// Register shutdown handler to clean up plugins
+var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+lifetime.ApplicationStopping.Register(async () =>
+{
+    await pluginManager.ShutdownAsync();
+});
 
 host.Run();
